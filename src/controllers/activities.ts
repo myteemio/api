@@ -1,18 +1,28 @@
-import { Elysia, t } from 'elysia';
+import { Elysia, NotFoundError, t } from 'elysia';
+import { NotFoundDTO } from '../types/NotFoundDTO';
+import { InternalServerErrorDTO } from '../types/InternalServerErrorDTO';
 
-export const ActivityDTO = t.Object({
-  id: t.Optional(t.String({ examples: '2ec64518-3d26-48ad-ac52-4cb8759f6942' })),
-  title: t.String(),
+const ActivityDTO = t.Object({
+  id: t.String(),
+  url: t.String(),
+  name: t.String(),
   description: t.String(),
-  image: t.String(),
-  price: t.Number(),
+  iamge: t.String(),
+  pris: t.Number(),
   persons: t.Number(),
-  type: t.String(),
+  category: t.Array(t.String()),
+  address: t.Object({
+    adress1: t.String(),
+    address2: t.String(),
+    zipcode: t.String(),
+    country: t.String(),
+  }),
+  referralLink: t.String(),
   location: t.Object({
-    address: t.String(),
     lat: t.Number(),
     long: t.Number(),
   }),
+  estimatedHours: t.Number(),
 });
 
 export const activitiesRoute = (app: Elysia) =>
@@ -21,12 +31,15 @@ export const activitiesRoute = (app: Elysia) =>
     app.get(
       '/',
       () => {
-        return [];
+        return { activities: [] };
       },
       {
+        response: {
+          200: t.Object({ activities: t.Array(ActivityDTO) }),
+          500: InternalServerErrorDTO,
+        },
         detail: {
           summary: 'Returns a list of all activities',
-          description: 'Shows all activities',
           tags: ['Activities'],
         },
       }
@@ -34,30 +47,25 @@ export const activitiesRoute = (app: Elysia) =>
 
     // /activities/:id
     app.get(
-      '/:id',
-      () => {
-        return {
-          id: '2ec64518-3d26-48ad-ac52-4cb8759f6942',
-          title: 'Test',
-          description: 'test',
-          image: 'test',
-          price: 4,
-          persons: 4,
-          type: 'yeeet',
-          location: {
-            address: 'Test address, 2100 København Ø',
-            lat: 55.5,
-            long: 43.3,
-          },
-        };
+      '/:idorurl',
+      ({ set }) => {
+        set.status = 404;
+        return { message: 'Not implemented', error_code: 'notimplemented' };
       },
       {
+        params: t.Object({
+          idorurl: t.String(),
+        }),
+        response: {
+          200: ActivityDTO,
+          404: NotFoundDTO,
+          500: InternalServerErrorDTO,
+        },
         detail: {
           summary: 'Returns a single activity with :id',
           tags: ['Activities'],
         },
       }
     );
-
     return app;
   });
