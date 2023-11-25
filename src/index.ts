@@ -3,8 +3,11 @@ import { swagger } from '@elysiajs/swagger';
 import { activitiesRoute } from './controllers/activities';
 import { myteemioRoute } from './controllers/myteemio';
 
-const app = new Elysia({ prefix: '/api' });
+// Setup db
+import './db/setupMongoDB';
 
+// Setup the Web API
+const app = new Elysia({ prefix: '/api' });
 // Setup Swagger
 
 app.use(

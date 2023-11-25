@@ -1,34 +1,65 @@
-//My teemio db model goes here
+import mongoose, { Schema } from 'mongoose';
+import { User } from './User';
 
-import { Activity } from './Activity';
+// Define MyTeemioDates Schema
+const myTeemioDatesSchema = new mongoose.Schema({
+  date: { type: Date, required: true },
+  votes: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: User,
+      required: true,
+    },
+  ], // Assuming votes are user IDs
+});
 
-export type MyTeemio = {
-  id: string;
-  status: 'active' | 'locked' | 'finalized';
-  activities: [MyTeemioActivity];
-  organizer: string; // ID of user that created this
-  eventinfo: {
-    name: string;
-    description: string;
-    logo: string;
-  };
-  dates: [MyTeemioDates];
-  final: {
-    date: Date;
-    activity: [string | Partial<Activity>]; // ID of our activity or the custom activity they made
-  };
-};
-
-type MyTeemioDates = {
-  date: Date;
-  votes: [string]; // ID's of users that voted
-};
-
-type MyTeemioActivity = {
-  activity: string | Partial<Activity>; // ID of activity in DB or Custom Activity.
+// Define MyTeemioActivity Schema
+const myTeemioActivitySchema = new mongoose.Schema({
+  activity: {
+    type: mongoose.Schema.Types.Mixed, // For string | Partial<Activity>
+    required: true,
+  },
   timeslot: {
-    from: Date;
-    to: Date;
-  };
-  votes: [string]; // ID's of users that voted
-};
+    from: { type: Date, required: true },
+    to: { type: Date, required: true },
+  },
+  votes: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: User,
+      required: true,
+    },
+  ], // Assuming votes are user IDs
+});
+
+// Define MyTeemio Schema
+const myTeemioSchema = new mongoose.Schema({
+  status: {
+    type: String,
+    enum: ['active', 'locked', 'finalized'],
+    required: true,
+  },
+  activities: [myTeemioActivitySchema],
+  organizer: {
+    type: Schema.Types.ObjectId,
+    ref: User,
+    required: true,
+  },
+  eventinfo: {
+    name: { type: String, required: true },
+    description: { type: String, required: true },
+    logo: { type: String, required: true },
+  },
+  dates: [myTeemioDatesSchema],
+  final: {
+    date: { type: Date, required: true },
+    activity: {
+      type: mongoose.Schema.Types.Mixed, // For string | Partial<Activity>
+      required: true,
+    },
+  },
+});
+
+// Create the model from the schema
+export type MyTeemio = mongoose.InferSchemaType<typeof myTeemioSchema>;
+export const MyTeemio = mongoose.model('MyTeemio', myTeemioSchema);

@@ -1,0 +1,15 @@
+version: '3.9'
+
+services:
+  database:
+    container_name: teemio-dev-database
+    image: mongo:latest
+    ports:
+      - '27017:27017'
+    volumes:
+      - database_volume:/data/db
+    env_file: .env.database
+    deploy:
+      mode: global
+volumes:
+  database_volume:

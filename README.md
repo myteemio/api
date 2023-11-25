@@ -1,15 +1,23 @@
-# Elysia with Bun runtime
+# Teemio API
 
-## Getting Started
-To get started with this template, simply paste this command into your terminal:
-```bash
-bun create elysia ./elysia-example
+## Start Dev Database
+
+This requires a `.env.database` file in the root directory!
+
+```
+MONGO_INITDB_ROOT_USERNAME=dbUser
+MONGO_INITDB_ROOT_PASSWORD=xxx
+MONGO_INITDB_DATABASE=maindb
 ```
 
-## Development
-To start the development server run:
-```bash
-bun run dev
+```
+docker compose -f docker-database.yml up
 ```
 
-Open http://localhost:3000/ with your browser to see the result.
+## Connect to Dev Database
+
+Requires a `.env` file in the root directory!
+
+```
+DB_CONNECTION_STRING=mongodb://user:pass@localhost:27017/db?authSource=admin
+```

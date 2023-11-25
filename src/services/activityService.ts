@@ -1,9 +1,9 @@
-import { dbActivies } from '../db/db';
+import { Activity } from '../models/Activity';
 
 export async function findActivityBId(id: string) {
-  return dbActivies.find((p) => p?.id === id);
+  return await Activity.findById(id);
 }
 
 export async function findActivityBUrl(url: string) {
-  return dbActivies.find((p) => p?.url === url);
+  return await Activity.findOne({ url: url });
 }

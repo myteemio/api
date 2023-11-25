@@ -14,7 +14,7 @@ const myTeemioCustomActivityDTO = t.Object({
   image: t.String(),
   adress: t.Object({
     address1: t.String(),
-    address2: t.String(),
+    address2: t.Optional(t.Nullable(t.String())),
     zipcode: t.String(),
     city: t.String(),
     country: t.String(),

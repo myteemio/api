@@ -14,7 +14,7 @@ const ActivityDTO = t.Object({
   category: t.Array(t.String()),
   address: t.Object({
     address1: t.String(),
-    address2: t.String(),
+    address2: t.Optional(t.Nullable(t.String())),
     zipcode: t.String(),
     country: t.String(),
   }),
