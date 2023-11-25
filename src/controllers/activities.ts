@@ -1,18 +1,19 @@
 import { Elysia, NotFoundError, t } from 'elysia';
 import { NotFoundDTO } from '../types/NotFoundDTO';
 import { InternalServerErrorDTO } from '../types/InternalServerErrorDTO';
+import { findActivityBId, findActivityBUrl } from '../services/activityService';
 
 const ActivityDTO = t.Object({
   id: t.String(),
   url: t.String(),
   name: t.String(),
   description: t.String(),
-  iamge: t.String(),
+  image: t.String(),
   pris: t.Number(),
   persons: t.Number(),
   category: t.Array(t.String()),
   address: t.Object({
-    adress1: t.String(),
+    address1: t.String(),
     address2: t.String(),
     zipcode: t.String(),
     country: t.String(),
@@ -45,12 +46,51 @@ export const activitiesRoute = (app: Elysia) =>
       }
     );
 
-    // /activities/:id
+    // /activities/:idorurl
     app.get(
       '/:idorurl',
-      ({ set }) => {
+      async ({ params: { idorurl }, set }) => {
+        // Find by id
+        const activityById = await findActivityBId(idorurl);
+
+        if (activityById) {
+          return {
+            id: activityById.id,
+            url: activityById.url,
+            name: activityById.name,
+            description: activityById.description,
+            image: activityById.image,
+            pris: activityById.pris,
+            persons: activityById.persons,
+            category: activityById.category,
+            address: activityById.address,
+            referralLink: activityById.referralLink,
+            location: activityById.location,
+            estimatedHours: activityById.estimatedHours,
+          };
+        }
+
+        const activityByUrl = await findActivityBUrl(idorurl);
+
+        if (activityByUrl) {
+          return {
+            id: activityByUrl.id,
+            url: activityByUrl.url,
+            name: activityByUrl.name,
+            description: activityByUrl.description,
+            image: activityByUrl.image,
+            pris: activityByUrl.pris,
+            persons: activityByUrl.persons,
+            category: activityByUrl.category,
+            address: activityByUrl.address,
+            referralLink: activityByUrl.referralLink,
+            location: activityByUrl.location,
+            estimatedHours: activityByUrl.estimatedHours,
+          };
+        }
+
         set.status = 404;
-        return { message: 'Not implemented', error_code: 'notimplemented' };
+        return { message: 'Not found', error_code: 'notfound' };
       },
       {
         params: t.Object({
