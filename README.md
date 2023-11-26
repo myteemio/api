@@ -20,4 +20,5 @@ Requires a `.env` file in the root directory!
 
 ```
 DB_CONNECTION_STRING=mongodb://user:pass@localhost:27017/db?authSource=admin
+JWT_SECRET=xxxx
 ```
