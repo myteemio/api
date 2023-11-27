@@ -1,9 +1,9 @@
 import { Activity } from '../models/Activity';
 
-export async function findActivityBId(id: string) {
+export async function findActivityById(id: string) {
   return await Activity.findById(id);
 }
 
-export async function findActivityBUrl(url: string) {
+export async function findActivityByUrl(url: string) {
   return await Activity.findOne({ url: url });
 }

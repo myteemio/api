@@ -1,7 +1,7 @@
 import { Elysia, NotFoundError, t } from 'elysia';
 import { NotFoundDTO } from '../types/NotFoundDTO';
 import { InternalServerErrorDTO } from '../types/InternalServerErrorDTO';
-import { findActivityBId, findActivityBUrl } from '../services/activityService';
+import { findActivityById, findActivityByUrl } from '../services/activityService';
 
 const ActivityDTO = t.Object({
   id: t.String(),
@@ -51,7 +51,7 @@ export const activitiesRoute = (app: Elysia) =>
       '/:idorurl',
       async ({ params: { idorurl }, set }) => {
         // Find by id
-        const activityById = await findActivityBId(idorurl);
+        const activityById = await findActivityById(idorurl);
 
         if (activityById) {
           return {
@@ -70,7 +70,7 @@ export const activitiesRoute = (app: Elysia) =>
           };
         }
 
-        const activityByUrl = await findActivityBUrl(idorurl);
+        const activityByUrl = await findActivityByUrl(idorurl);
 
         if (activityByUrl) {
           return {

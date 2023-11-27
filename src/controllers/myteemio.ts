@@ -2,6 +2,7 @@ import { Elysia, t } from 'elysia';
 import { BadRequestDTO } from '../types/BadRequestDTO';
 import { InternalServerErrorDTO } from '../types/InternalServerErrorDTO';
 import { NotFoundDTO } from '../types/NotFoundDTO';
+import { MyTeemio } from '../models/MyTeemio';
 
 const myTeemioUserDTO = t.Object({
   id: t.String(),
@@ -35,7 +36,8 @@ const createTeemioDTO = t.Object({
   eventinfo: t.Object({
     name: t.String(),
     description: t.String(),
-    logo: t.File(),
+    //TODO: Change back to t.File() when it works
+    logo: t.String(),
   }),
   dates: t.Array(t.Date()),
   organizer: t.Object({
@@ -113,7 +115,32 @@ export const myteemioRoute = (app: Elysia) =>
   app.group('/myteemio', (app) => {
     app.post(
       '/create',
-      ({ set }) => {
+      async ({ body, set }) => {
+        if (body) {
+          try {
+            // Create a new MyTeemio instance with the request body data
+            const newTeemio = new MyTeemio({
+              status: 'active',
+              activities: body.activities,
+              eventinfo: body.eventinfo,
+              dates: body.dates,
+              organizer: '6564aad708cd300b74d201ae',
+              final: {
+                date: new Date(),
+                activity: 'test',
+              },
+            });
+
+            newTeemio.save();
+
+            // Set success status and return the saved user's ID
+            set.status = 200;
+            return { id: 'test' };
+          } catch (error) {
+            set.status = 400;
+            return { message: 'Bad request', error_code: 'badrequest' };
+          }
+        }
         set.status = 500;
         return { message: 'Not implemented', error_code: 'notimplemented' };
       },
