@@ -9,10 +9,8 @@ export const authRoute = (app: Elysia) =>
     });
 
     // require authroization
-    app.use(isAuthenticated);
-    // The endpoint for getting account information
-    app.get('/account', () => {
-      return 'My Account!';
+    app.use(isAuthenticated).get('/account', ({ store, user }) => {
+      return `My Account! ${JSON.stringify(user)}`;
     });
     return app;
   });

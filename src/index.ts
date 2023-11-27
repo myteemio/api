@@ -23,20 +23,6 @@ app.use(
 // Setup CORS
 app.use(cors({ preflight: true, methods: '*', origin: true }));
 
-// Setup JWT
-
-if (!process.env.JWT_SECRET) {
-  throw new Error('No JWT_SECRET configured!');
-}
-
-app.use(
-  jwt({
-    name: 'jwt',
-    secret: process.env.JWT_SECRET,
-    exp: '30d',
-  })
-);
-
 // Setup Swagger
 app.use(
   swagger({
@@ -77,4 +63,4 @@ app.use(authRoute);
 // Start the server
 app.listen(process.env.PORT ?? 3001);
 
-console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`);
+console.log(`🦊 Elysia is running at http://${app.server?.hostname}:${app.server?.port}`);
