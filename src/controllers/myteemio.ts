@@ -109,142 +109,141 @@ const voteTeemioDTO = t.Object({
   }),
 });
 
-export const myteemioRoute = (app: Elysia) =>
-  app.group('/myteemio', (app) => {
-    app.post(
-      '/create',
-      ({ set }) => {
-        set.status = 500;
-        return { message: 'Not implemented', error_code: 'notimplemented' };
+export const myteemioRoute = new Elysia({ name: 'routes:myteemio' }).group('/myteemio', (app) => {
+  app.post(
+    '/create',
+    ({ set }) => {
+      set.status = 500;
+      return { message: 'Not implemented', error_code: 'notimplemented' };
+    },
+    {
+      body: createTeemioDTO,
+      response: {
+        200: t.Object({ id: t.String({ default: 'ID of created event' }) }), // ID of the teemio
+        400: BadRequestDTO,
+        500: InternalServerErrorDTO,
       },
-      {
-        body: createTeemioDTO,
-        response: {
-          200: t.Object({ id: t.String({ default: 'ID of created event' }) }), // ID of the teemio
-          400: BadRequestDTO,
-          500: InternalServerErrorDTO,
-        },
-        detail: {
-          summary: 'Create a new Teemio event',
-          tags: ['My Teemio'],
-        },
-      }
-    );
-
-    app.get(
-      '/:idorurl',
-      ({ set }) => {
-        set.status = 500;
-        return { message: 'Not implemented', error_code: 'notimplemented' };
+      detail: {
+        summary: 'Create a new Teemio event',
+        tags: ['My Teemio'],
       },
-      {
-        response: {
-          200: returnTeemioDTO,
-          404: NotFoundDTO,
-          500: InternalServerErrorDTO,
-        },
-        detail: {
-          summary: 'Get a single Teemio event',
-          tags: ['My Teemio'],
-        },
-      }
-    );
+    }
+  );
 
-    app.put(
-      '/:idorurl',
-      ({ set }) => {
-        set.status = 500;
-        return { message: 'Not implemented', error_code: 'notimplemented' };
+  app.get(
+    '/:idorurl',
+    ({ set }) => {
+      set.status = 500;
+      return { message: 'Not implemented', error_code: 'notimplemented' };
+    },
+    {
+      response: {
+        200: returnTeemioDTO,
+        404: NotFoundDTO,
+        500: InternalServerErrorDTO,
       },
-      {
-        body: editMyTeemioDTO,
-        response: {
-          200: returnTeemioDTO,
-          404: NotFoundDTO,
-          500: InternalServerErrorDTO,
-        },
-        detail: {
-          summary: 'Update a single teemio event',
-          tags: ['My Teemio'],
-        },
-      }
-    );
-
-    app.get(
-      '/:idorurl/pdf',
-      ({ set }) => {
-        set.status = 500;
-        return { message: 'Not implemented', error_code: 'notimplemented' };
+      detail: {
+        summary: 'Get a single Teemio event',
+        tags: ['My Teemio'],
       },
-      {
-        response: {
-          200: t.Object({ pdf: t.File() }),
-          404: NotFoundDTO,
-          500: InternalServerErrorDTO,
-        },
-        detail: {
-          summary: 'Return a PDF version of the Teemio event',
-          tags: ['My Teemio'],
-        },
-      }
-    );
+    }
+  );
 
-    app.put(
-      '/:idorurl/status',
-      ({ set }) => {
-        set.status = 500;
-        return { message: 'Not implemented', error_code: 'notimplemented' };
+  app.put(
+    '/:idorurl',
+    ({ set }) => {
+      set.status = 500;
+      return { message: 'Not implemented', error_code: 'notimplemented' };
+    },
+    {
+      body: editMyTeemioDTO,
+      response: {
+        200: returnTeemioDTO,
+        404: NotFoundDTO,
+        500: InternalServerErrorDTO,
       },
-      {
-        body: t.Object({
-          newstatus: t.String({ default: 'locked' }),
-        }),
-        detail: {
-          summary: 'Update the status of the Teemio event',
-          tags: ['My Teemio'],
-        },
-      }
-    );
-
-    app.post(
-      '/:idorurl/finalize',
-      ({ set }) => {
-        set.status = 500;
-        return { message: 'Not implemented', error_code: 'notimplemented' };
+      detail: {
+        summary: 'Update a single teemio event',
+        tags: ['My Teemio'],
       },
-      {
-        body: finalizeTeemioDTO,
-        response: {
-          200: returnTeemioDTO,
-          404: NotFoundDTO,
-          500: InternalServerErrorDTO,
-        },
-        detail: {
-          summary: 'Finalize the Teemio event and set the status to completed',
-          tags: ['My Teemio'],
-        },
-      }
-    );
+    }
+  );
 
-    app.post(
-      '/:idorurl/vote',
-      ({ set }) => {
-        set.status = 500;
-        return { message: 'Not implemented', error_code: 'notimplemented' };
+  app.get(
+    '/:idorurl/pdf',
+    ({ set }) => {
+      set.status = 500;
+      return { message: 'Not implemented', error_code: 'notimplemented' };
+    },
+    {
+      response: {
+        200: t.Object({ pdf: t.File() }),
+        404: NotFoundDTO,
+        500: InternalServerErrorDTO,
       },
-      {
-        body: voteTeemioDTO,
-        response: {
-          200: returnTeemioDTO,
-          404: NotFoundDTO,
-          500: InternalServerErrorDTO,
-        },
-        detail: {
-          summary: 'Let users vote on their favorite activities or dates',
-          tags: ['My Teemio'],
-        },
-      }
-    );
+      detail: {
+        summary: 'Return a PDF version of the Teemio event',
+        tags: ['My Teemio'],
+      },
+    }
+  );
 
-    return app;
-  });
+  app.put(
+    '/:idorurl/status',
+    ({ set }) => {
+      set.status = 500;
+      return { message: 'Not implemented', error_code: 'notimplemented' };
+    },
+    {
+      body: t.Object({
+        newstatus: t.String({ default: 'locked' }),
+      }),
+      detail: {
+        summary: 'Update the status of the Teemio event',
+        tags: ['My Teemio'],
+      },
+    }
+  );
+
+  app.post(
+    '/:idorurl/finalize',
+    ({ set }) => {
+      set.status = 500;
+      return { message: 'Not implemented', error_code: 'notimplemented' };
+    },
+    {
+      body: finalizeTeemioDTO,
+      response: {
+        200: returnTeemioDTO,
+        404: NotFoundDTO,
+        500: InternalServerErrorDTO,
+      },
+      detail: {
+        summary: 'Finalize the Teemio event and set the status to completed',
+        tags: ['My Teemio'],
+      },
+    }
+  );
+
+  app.post(
+    '/:idorurl/vote',
+    ({ set }) => {
+      set.status = 500;
+      return { message: 'Not implemented', error_code: 'notimplemented' };
+    },
+    {
+      body: voteTeemioDTO,
+      response: {
+        200: returnTeemioDTO,
+        404: NotFoundDTO,
+        500: InternalServerErrorDTO,
+      },
+      detail: {
+        summary: 'Let users vote on their favorite activities or dates',
+        tags: ['My Teemio'],
+      },
+    }
+  );
+
+  return app;
+});
