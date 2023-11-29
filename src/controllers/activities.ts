@@ -4,13 +4,14 @@ import { InternalServerErrorDTO } from '../types/InternalServerErrorDTO';
 import {
   findActivityById,
   findActivityByUrl,
+  getAllActivities,
 } from '../services/activityService';
 import { Activity } from '../models/Activity';
 import { BadRequestDTO } from '../types/BadRequestDTO';
 
 const ActivityDTO = t.Object({
-  url: t.String(),
   name: t.String(),
+  url: t.String(),
   description: t.String(),
   image: t.String(),
   pris: t.Number(),
@@ -40,10 +41,10 @@ export const activitiesRoute = (app: Elysia) =>
         if (body) {
           try {
             const newActivity = new Activity({
+              name: body.name,
               url: `https://teemio.dk/activities/${body.name
                 .replace(/\s+/g, '')
                 .toLocaleLowerCase()}`,
-              name: body.name,
               description: body.description,
               image: body.image,
               pris: body.pris,
@@ -85,8 +86,28 @@ export const activitiesRoute = (app: Elysia) =>
 
     app.get(
       '/',
-      () => {
-        return { activities: [] };
+      async ({ set }) => {
+        const activities = await getAllActivities();
+        if (activities) {
+          //Have to map since name and url switch place for some reason?
+          const activitiesDTO = activities.map((activity) => ({
+            name: activity.name,
+            url: activity.url,
+            description: activity.description,
+            image: activity.image,
+            pris: activity.pris,
+            persons: activity.persons,
+            category: activity.category,
+            address: activity.address,
+            referralLink: activity.referralLink,
+            location: activity.location,
+            estimatedHours: activity.estimatedHours,
+          }));
+          set.status = 200;
+          return { activities: activitiesDTO };
+        }
+        set.status = 500;
+        return { message: `Could not get activities`, error_code: 'server' };
       },
       {
         response: {

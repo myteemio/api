@@ -7,3 +7,7 @@ export async function findActivityById(id: string) {
 export async function findActivityByUrl(url: string) {
   return await Activity.findOne({ url: url });
 }
+
+export async function getAllActivities() {
+  return await Activity.find();
+}
