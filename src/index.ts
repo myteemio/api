@@ -7,6 +7,15 @@ import { helmet } from 'elysia-helmet';
 import jwt from '@elysiajs/jwt';
 import { authRoute } from './controllers/auth';
 
+// Check for ENV variables
+if (!process.env.JWT_SECRET) {
+  throw new Error('No JWT_SECRET configured!');
+}
+
+if (!process.env.DB_CONNECTION_STRING) {
+  throw new Error('No DB_CONNECTION_STRING configured!');
+}
+
 // Setup db
 import './db/setupMongoDB';
 
@@ -51,6 +60,16 @@ app.use(
           description: 'All other endpoints',
         },
       ],
+      components: {
+        securitySchemes: {
+          AccessToken: {
+            type: 'http',
+            scheme: 'bearer',
+            bearerFormat: 'JWT',
+            description: 'The JWT Authorization access token used to authenticate the logged in user ',
+          },
+        },
+      },
     },
   })
 );

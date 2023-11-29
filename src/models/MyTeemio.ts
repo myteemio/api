@@ -1,4 +1,4 @@
-import mongoose, { Schema } from 'mongoose';
+import mongoose, { Document, Schema } from 'mongoose';
 import { User } from './User';
 
 // Define MyTeemioDates Schema
@@ -62,4 +62,5 @@ const myTeemioSchema = new mongoose.Schema({
 
 // Create the model from the schema
 export type MyTeemio = mongoose.InferSchemaType<typeof myTeemioSchema>;
+export type MyTeemioDocument = MyTeemio & Document;
 export const MyTeemio = mongoose.model('MyTeemio', myTeemioSchema);
