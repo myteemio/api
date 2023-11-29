@@ -107,7 +107,7 @@ export const activitiesRoute = (app: Elysia) =>
           return { activities: activitiesDTO };
         }
         set.status = 500;
-        return { message: `Could not get activities due to server error`, error_code: 'server' };
+        return { message: `Could not get activities due to server error`, error_code: 'internalservererror' };
       },
       {
         response: {

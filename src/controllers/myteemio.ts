@@ -3,7 +3,11 @@ import { BadRequestDTO } from '../types/BadRequestDTO';
 import { InternalServerErrorDTO } from '../types/InternalServerErrorDTO';
 import { NotFoundDTO } from '../types/NotFoundDTO';
 import { MyTeemio } from '../models/MyTeemio';
-import { findTeemioById } from '../services/myTeemioService';
+import {
+  findTeemioById,
+  updateTeemioStatusById,
+  updateTeemioStatusByUrl,
+} from '../services/myTeemioService';
 import { getUserById } from '../services/userService';
 
 const myTeemioUserDTO = t.Object({
@@ -285,14 +289,48 @@ export const myteemioRoute = (app: Elysia) =>
 
     app.put(
       '/:idorurl/status',
-      ({ set }) => {
+      async ({ body, set, params: { idorurl } }) => {
+        try {
+          const updateStatusById = await updateTeemioStatusById(
+            idorurl,
+            body.newstatus
+          );
+          if (updateStatusById) {
+            set.status = 200;
+            return { message: 'Status successfully updated' };
+          }
+
+          const updateStatusByUrl = await updateTeemioStatusByUrl(
+            idorurl,
+            body.newstatus
+          );
+          if (updateStatusByUrl) {
+            set.status = 200;
+            return { message: 'Status successfully updated' };
+          }
+        } catch (error) {
+          set.status = 404;
+          return {
+            message: 'Teemio not found. Make sure the ID or URL is correct',
+            error_code: 'teemionotfound',
+          };
+        }
+
         set.status = 500;
-        return { message: 'Not implemented', error_code: 'notimplemented' };
+        return {
+          message: 'An error ocurred with the server',
+          error_code: 'internalservererror',
+        };
       },
       {
         body: t.Object({
           newstatus: t.String({ default: 'locked' }),
         }),
+        response: {
+          200: t.Object({ message: t.String({ default: 'Status updated' }) }),
+          404: NotFoundDTO,
+          500: InternalServerErrorDTO,
+        },
         detail: {
           summary: 'Update the status of the Teemio event',
           tags: ['My Teemio'],
