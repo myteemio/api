@@ -1,10 +1,6 @@
 import mongoose, { Schema } from 'mongoose';
 
 const ActivityScheme = new mongoose.Schema({
-  id: {
-    type: Schema.Types.ObjectId,
-    required: true,
-  },
   url: {
     type: String,
     required: true,

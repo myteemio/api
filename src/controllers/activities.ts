@@ -1,10 +1,14 @@
-import { Elysia, NotFoundError, t } from 'elysia';
+import { Elysia, t } from 'elysia';
 import { NotFoundDTO } from '../types/NotFoundDTO';
 import { InternalServerErrorDTO } from '../types/InternalServerErrorDTO';
-import { findActivityById, findActivityByUrl } from '../services/activityService';
+import {
+  findActivityById,
+  findActivityByUrl,
+} from '../services/activityService';
+import { Activity } from '../models/Activity';
+import { BadRequestDTO } from '../types/BadRequestDTO';
 
 const ActivityDTO = t.Object({
-  id: t.String(),
   url: t.String(),
   name: t.String(),
   description: t.String(),
@@ -16,6 +20,7 @@ const ActivityDTO = t.Object({
     address1: t.String(),
     address2: t.Optional(t.Nullable(t.String())),
     zipcode: t.String(),
+    city: t.String(),
     country: t.String(),
   }),
   referralLink: t.String(),
@@ -29,6 +34,55 @@ const ActivityDTO = t.Object({
 export const activitiesRoute = (app: Elysia) =>
   app.group('/activities', (app) => {
     // /activites
+    app.post(
+      '/',
+      ({ body, set }) => {
+        if (body) {
+          try {
+            const newActivity = new Activity({
+              url: `https://teemio.dk/activities/${body.name
+                .replace(/\s+/g, '')
+                .toLocaleLowerCase()}`,
+              name: body.name,
+              description: body.description,
+              image: body.image,
+              pris: body.pris,
+              persons: body.persons,
+              category: body.category,
+              address: body.address,
+              referralLink: body.referralLink,
+              location: body.location,
+              estimatedHours: body.estimatedHours,
+            });
+
+            newActivity.save();
+            set.status = 201;
+            return { id: newActivity._id.toString() };
+          } catch (error) {
+            set.status = 400;
+            return {
+              message: `Bad request: ${error}`,
+              error_code: 'badrequest',
+            };
+          }
+        }
+      },
+      {
+        body: ActivityDTO,
+        response: {
+          201: t.Object({
+            id: t.String({ default: 'ID of created activity' }),
+          }),
+          400: BadRequestDTO,
+          500: InternalServerErrorDTO,
+        },
+        detail: {
+          summary: 'Create a new activity',
+          tags: ['Activities'],
+        },
+      }
+    );
+
     app.get(
       '/',
       () => {

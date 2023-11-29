@@ -135,11 +135,14 @@ export const myteemioRoute = (app: Elysia) =>
 
             newTeemio.save();
             // Set success status and return the saved user's ID
-            set.status = 200;
+            set.status = 201;
             return { id: newTeemio.organizer._id.toString() };
           } catch (error) {
             set.status = 400;
-            return { message: 'Bad request', error_code: 'badrequest' };
+            return {
+              message: `Bad request ${error}`,
+              error_code: 'badrequest',
+            };
           }
         }
         set.status = 500;
@@ -148,7 +151,7 @@ export const myteemioRoute = (app: Elysia) =>
       {
         body: createTeemioDTO,
         response: {
-          200: t.Object({ id: t.String({ default: 'ID of created event' }) }), // ID of the teemio
+          201: t.Object({ id: t.String({ default: 'ID of created event' }) }), // ID of the teemio
           400: BadRequestDTO,
           500: InternalServerErrorDTO,
         },
