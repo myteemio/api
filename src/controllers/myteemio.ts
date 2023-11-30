@@ -5,6 +5,7 @@ import { NotFoundDTO } from '../types/NotFoundDTO';
 import { MyTeemio } from '../models/MyTeemio';
 import {
   findTeemioById,
+  updateTeemioById,
   updateTeemioStatusById,
   updateTeemioStatusByUrl,
 } from '../services/myTeemioService';
@@ -85,7 +86,7 @@ const returnTeemioDTO = t.Object({
   }),
 });
 
-const editMyTeemioDTO = t.Object({
+export const editMyTeemioDTO = t.Object({
   activities: t.Array(myTeemioActivityDTO),
   eventinfo: t.Object({
     name: t.String(),
@@ -150,7 +151,10 @@ export const myteemioRoute = (app: Elysia) =>
           }
         }
         set.status = 500;
-        return { message: 'Not implemented', error_code: 'notimplemented' };
+        return {
+          message: 'There was an error with the request',
+          error_code: 'internalservererror',
+        };
       },
       {
         body: createTeemioDTO,
@@ -169,71 +173,81 @@ export const myteemioRoute = (app: Elysia) =>
     app.get(
       '/:idorurl',
       async ({ params: { idorurl }, set }) => {
-        const teemioById = await findTeemioById(idorurl);
-        if (teemioById) {
-          set.status = 200;
+        try {
+          const teemioById = await findTeemioById(idorurl);
+          if (teemioById) {
+            set.status = 200;
+            return {
+              id: idorurl,
+              status: teemioById.status,
+              activities: teemioById.activities.map((activity) => ({
+                ...activity,
+                votes: activity.votes.map((vote) => ({
+                  id: vote.id.toString(),
+                  name: vote.name,
+                })),
+              })),
+              organizer: {
+                id: teemioById.organizer.toString(),
+                name:
+                  (await getUserById(teemioById.organizer.toString()))?.name ||
+                  '',
+              },
+              eventinfo: teemioById.eventinfo,
+              dates: teemioById.dates.map((date) => ({
+                ...date,
+                votes: date.votes.map((vote) => ({
+                  id: vote.id.toString(),
+                  name: vote.name,
+                })),
+              })),
+              final: teemioById.final,
+            };
+          }
+
+          const teemioByUrl = await findTeemioById(idorurl);
+
+          if (teemioByUrl) {
+            set.status = 200;
+            return {
+              id: idorurl,
+              status: teemioByUrl.status,
+              activities: teemioByUrl.activities.map((activity) => ({
+                ...activity,
+                votes: activity.votes.map((vote) => ({
+                  id: vote.id.toString(),
+                  name: vote.name,
+                })),
+              })),
+              organizer: {
+                id: teemioByUrl.organizer.toString(),
+                name:
+                  (await getUserById(teemioByUrl.organizer.toString()))?.name ||
+                  '',
+              },
+              eventinfo: teemioByUrl.eventinfo,
+              dates: teemioByUrl.dates.map((date) => ({
+                ...date,
+                votes: date.votes.map((vote) => ({
+                  id: vote.id.toString(),
+                  name: vote.name,
+                })),
+              })),
+              final: teemioByUrl.final,
+            };
+          }
+        } catch (error) {
+          set.status = 404;
           return {
-            id: idorurl,
-            status: teemioById.status,
-            activities: teemioById.activities.map((activity) => ({
-              ...activity,
-              votes: activity.votes.map((vote) => ({
-                id: vote.id.toString(),
-                name: vote.name,
-              })),
-            })),
-            organizer: {
-              id: teemioById.organizer.toString(),
-              name:
-                (await getUserById(teemioById.organizer.toString()))?.name ||
-                '',
-            },
-            eventinfo: teemioById.eventinfo,
-            dates: teemioById.dates.map((date) => ({
-              ...date,
-              votes: date.votes.map((vote) => ({
-                id: vote.id.toString(),
-                name: vote.name,
-              })),
-            })),
-            final: teemioById.final,
+            message: 'Teemio not found. Make sure the ID or URL is correct',
+            error_code: 'teemionotfound',
           };
         }
-
-        const teemioByUrl = await findTeemioById(idorurl);
-
-        if (teemioByUrl) {
-          set.status = 200;
-          return {
-            id: idorurl,
-            status: teemioByUrl.status,
-            activities: teemioByUrl.activities.map((activity) => ({
-              ...activity,
-              votes: activity.votes.map((vote) => ({
-                id: vote.id.toString(),
-                name: vote.name,
-              })),
-            })),
-            organizer: {
-              id: teemioByUrl.organizer.toString(),
-              name:
-                (await getUserById(teemioByUrl.organizer.toString()))?.name ||
-                '',
-            },
-            eventinfo: teemioByUrl.eventinfo,
-            dates: teemioByUrl.dates.map((date) => ({
-              ...date,
-              votes: date.votes.map((vote) => ({
-                id: vote.id.toString(),
-                name: vote.name,
-              })),
-            })),
-            final: teemioByUrl.final,
-          };
-        }
-
         set.status = 500;
-        return { message: 'Not implemented', error_code: 'notimplemented' };
+        return {
+          message: 'There was an error with the request',
+          error_code: 'internalservererror',
+        };
       },
       {
         response: {
@@ -250,7 +264,7 @@ export const myteemioRoute = (app: Elysia) =>
 
     app.put(
       '/:idorurl',
-      ({ set }) => {
+      async ({ body, set, params: { idorurl } }) => {
         set.status = 500;
         return { message: 'Not implemented', error_code: 'notimplemented' };
       },
