@@ -16,6 +16,10 @@ if (!process.env.DB_CONNECTION_STRING) {
   throw new Error('No DB_CONNECTION_STRING configured!');
 }
 
+if (!process.env.RESEND_API_KEY) {
+  throw new Error('No RESEND_API_KEY configured!');
+}
+
 // Setup db
 import './db/setupMongoDB';
 

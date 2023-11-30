@@ -8,10 +8,10 @@ import {
   findActivityByUrl,
   getAllActivities,
   makeUrlSafe,
-  mapActivityToActivityDTO,
 } from '../services/activityService';
 import { BadRequestDTO } from '../types/BadRequestDTO';
 import mongoose from 'mongoose';
+import { mapActivityToActivityDTO } from '../services/mappers';
 
 export const GetActivityDTO = t.Object({
   id: t.String(),
@@ -63,6 +63,7 @@ export const activitiesRoute = new Elysia({ name: 'routes:activities' }).group('
   app.get(
     '/:idorurl',
     async ({ params: { idorurl }, set }) => {
+      // Check if ID is valid
       if (mongoose.isValidObjectId(idorurl)) {
         // Find by id
         const activityById = await findActivityById(idorurl);

@@ -2,6 +2,18 @@ import Elysia, { t } from 'elysia';
 import { isAuthenticated } from '../plugins/authPlugin';
 import { createNewUser, findUserByEmail } from '../services/userService';
 import jwt from '@elysiajs/jwt';
+import { mapUserToUserDTO } from '../services/mappers';
+import { ForbiddenDTO } from '../types/ForbiddenDTO';
+import { sendSignInEmail } from '../services/mailService';
+import { InternalServerErrorDTO } from '../types/InternalServerErrorDTO';
+
+export const getUserDTO = t.Object({
+  id: t.String(),
+  name: t.String(),
+  email: t.Optional(t.Nullable(t.String())),
+  phone: t.Optional(t.Nullable(t.String())),
+  type: t.String(),
+});
 
 export const authRoute = new Elysia({ name: 'routes:auth' }).group('/auth', (app) =>
   app
@@ -14,9 +26,7 @@ export const authRoute = new Elysia({ name: 'routes:auth' }).group('/auth', (app
     )
     .post(
       '/signin',
-      async ({ body, jwt }) => {
-        // SET THIS UP TO SEND EMAIL WITH CODE
-
+      async ({ body, jwt, set }) => {
         const existingUser = await findUserByEmail(body.email);
 
         if (!existingUser) {
@@ -26,14 +36,29 @@ export const authRoute = new Elysia({ name: 'routes:auth' }).group('/auth', (app
             email: body.email,
             phone: '+45 21775413',
           });
-          return newUser;
+          set.status = 201;
+          return { message: 'User created!', user: mapUserToUserDTO(newUser) };
         }
 
+        // Send the token to the mail for magic login
         const token = await jwt.sign(existingUser.toObject());
 
-        return `Signed in! AccessToken: ${token}`;
+        try {
+          await sendSignInEmail(existingUser.toObject(), token);
+          return { message: `Check your email for magic link to login!` };
+        } catch (err: any) {
+          console.error(err);
+          set.status = 500;
+          return { message: 'Error sending email', error_code: 'internalservererror' };
+        }
       },
       {
+        response: {
+          200: t.Object({ message: t.String() }),
+          201: t.Object({ message: t.String(), user: getUserDTO }),
+          403: ForbiddenDTO,
+          500: InternalServerErrorDTO,
+        },
         body: t.Object({ email: t.String() }),
         detail: {
           summary: 'Sign in using email',

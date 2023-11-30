@@ -1,6 +1,6 @@
 import { User } from '../models/User';
 
-export async function createNewUser(user: User): Promise<User> {
+export async function createNewUser(user: User) {
   if (user.email && !isEmailValid(user.email)) {
     throw new Error('Email is not valid');
   }
