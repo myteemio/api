@@ -6,6 +6,7 @@ import { mapUserToUserDTO } from '../services/mappers';
 import { ForbiddenDTO } from '../types/ForbiddenDTO';
 import { sendSignInEmail } from '../services/mailService';
 import { InternalServerErrorDTO } from '../types/InternalServerErrorDTO';
+import { NotFoundDTO } from '../types/NotFoundDTO';
 
 export const getUserDTO = t.Object({
   id: t.String(),
@@ -41,7 +42,7 @@ export const authRoute = new Elysia({ name: 'routes:auth' }).group('/auth', (app
         }
 
         // Send the token to the mail for magic login
-        const token = await jwt.sign(existingUser.toObject());
+        const token = await jwt.sign({ id: existingUser.id });
 
         try {
           await sendSignInEmail(existingUser.toObject(), token);
@@ -69,10 +70,20 @@ export const authRoute = new Elysia({ name: 'routes:auth' }).group('/auth', (app
     .use(isAuthenticated({ type: 'All' }))
     .get(
       '/account',
-      ({ store, user }) => {
-        return `My Account! ${JSON.stringify(user)}`;
+      ({ user, set }) => {
+        if (!user) {
+          set.status = 404;
+          return { message: 'User not found!', error_code: 'nouseronaccount' };
+        }
+
+        return mapUserToUserDTO(user);
       },
       {
+        response: {
+          200: getUserDTO,
+          404: NotFoundDTO,
+          500: InternalServerErrorDTO,
+        },
         detail: {
           summary: 'View info on the currently logged in account',
           tags: ['Auth'],

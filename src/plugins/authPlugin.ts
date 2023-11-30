@@ -1,6 +1,6 @@
 import jwt from '@elysiajs/jwt';
 import Elysia from 'elysia';
-import { User } from '../models/User';
+import { findUserById } from '../services/userService';
 
 export const isAuthenticated = <const type>({ type = 'UserOnly' }: { type: 'UserOnly' | 'AdminOnly' | 'All' }) => {
   return new Elysia({ name: 'derived:isAuthenticated:user' })
@@ -35,8 +35,8 @@ export const isAuthenticated = <const type>({ type = 'UserOnly' }: { type: 'User
       }
 
       try {
-        const decoded = (await jwt.verify(token)) as false | (User & { exp: number });
-        if (!decoded || !decoded.name || typeof decoded.exp !== 'number') {
+        const decoded = (await jwt.verify(token)) as false | ({ id: string } & { exp: number });
+        if (!decoded || !decoded.id || typeof decoded.exp !== 'number') {
           return { authorized: false, reason: `Invalid token.` };
         }
 
@@ -45,11 +45,17 @@ export const isAuthenticated = <const type>({ type = 'UserOnly' }: { type: 'User
           return { authorized: false, reason: `Token has expired.` };
         }
 
-        if (type === 'UserOnly' && decoded.type !== 'user') {
+        const user = await findUserById(decoded.id);
+
+        if (!user) {
+          return { authorized: false, reason: `User not found in database.` };
+        }
+
+        if (type === 'UserOnly' && user.type !== 'user') {
           return { authorized: false, reason: `This is only for users.` };
         }
 
-        if (type === 'AdminOnly' && decoded.type !== 'admin') {
+        if (type === 'AdminOnly' && user.type !== 'admin') {
           return { authorized: false, reason: `This is only for admins.` };
         }
 
@@ -57,15 +63,13 @@ export const isAuthenticated = <const type>({ type = 'UserOnly' }: { type: 'User
           // Do nothing. Everyone is allowed.
         }
 
-        const { exp, ...userWithExp } = decoded;
-
-        return { authorized: true, user: userWithExp };
+        return { authorized: true, user: user };
       } catch (error) {
         return { authorized: false, reason: `Invalid token. ${error}` };
       }
     })
     .onBeforeHandle(({ authorized, user, reason, set }) => {
-      if (!authorized) {
+      if (!authorized || (authorized && !user)) {
         set.status = 'Unauthorized';
         return `Unauthorized! Reason: ${reason}`;
       }
