@@ -1,4 +1,4 @@
-import mongoose, { Schema } from 'mongoose';
+import mongoose, { Document, Schema } from 'mongoose';
 
 const ActivityScheme = new mongoose.Schema({
   name: {
@@ -17,7 +17,7 @@ const ActivityScheme = new mongoose.Schema({
     type: String,
     required: true,
   },
-  pris: {
+  price: {
     type: Number,
     required: true,
   },
@@ -82,4 +82,5 @@ const ActivityScheme = new mongoose.Schema({
 });
 
 export type Activity = mongoose.InferSchemaType<typeof ActivityScheme>;
+export type ActivityDocument = Activity & Document;
 export const Activity = mongoose.model('Activity', ActivityScheme);

@@ -2,19 +2,22 @@ import { Elysia, t } from 'elysia';
 import { NotFoundDTO } from '../types/NotFoundDTO';
 import { InternalServerErrorDTO } from '../types/InternalServerErrorDTO';
 import {
+  createNewActivity,
   findActivityById,
   findActivityByUrl,
   getAllActivities,
+  makeUrlSafe,
 } from '../services/activityService';
-import { Activity } from '../models/Activity';
 import { BadRequestDTO } from '../types/BadRequestDTO';
+import { mapActivityToActivityDTO } from '../services/mappers';
 
-const ActivityDTO = t.Object({
+export const GetActivityDTO = t.Object({
+  id: t.String(),
   name: t.String(),
   url: t.String(),
   description: t.String(),
   image: t.String(),
-  pris: t.Number(),
+  price: t.Number(),
   persons: t.Number(),
   category: t.Array(t.String()),
   address: t.Object({
@@ -32,33 +35,23 @@ const ActivityDTO = t.Object({
   estimatedHours: t.Number(),
 });
 
+export const createActivityDTO = t.Omit(GetActivityDTO, ['id']);
+
 export const activitiesRoute = (app: Elysia) =>
   app.group('/activities', (app) => {
     // /activites
     app.post(
       '/',
-      ({ body, set }) => {
+      async ({ body, set }) => {
         if (body) {
           try {
-            const newActivity = new Activity({
-              name: body.name,
-              url: `https://teemio.dk/activities/${body.name
-                .replace(/\s+/g, '')
-                .toLocaleLowerCase()}`,
-              description: body.description,
-              image: body.image,
-              pris: body.pris,
-              persons: body.persons,
-              category: body.category,
-              address: body.address,
-              referralLink: body.referralLink,
-              location: body.location,
-              estimatedHours: body.estimatedHours,
-            });
+            // Set the URL to something unique and safe
+            body.url = makeUrlSafe(`${body.name}-${Date.now()}`);
+            
+            // Create the new activity
+            const newActivity = await createNewActivity(body);
 
-            newActivity.save();
-            set.status = 201;
-            return { id: newActivity._id.toString() };
+            return mapActivityToActivityDTO(newActivity);
           } catch (error) {
             set.status = 400;
             return {
@@ -69,7 +62,7 @@ export const activitiesRoute = (app: Elysia) =>
         }
       },
       {
-        body: ActivityDTO,
+        body: createActivityDTO,
         response: {
           201: t.Object({
             id: t.String({ default: 'ID of created activity' }),
@@ -89,29 +82,22 @@ export const activitiesRoute = (app: Elysia) =>
       async ({ set }) => {
         const activities = await getAllActivities();
         if (activities) {
-          //Have to map since name and url switch place for some reason?
-          const activitiesDTO = activities.map((activity) => ({
-            name: activity.name,
-            url: activity.url,
-            description: activity.description,
-            image: activity.image,
-            pris: activity.pris,
-            persons: activity.persons,
-            category: activity.category,
-            address: activity.address,
-            referralLink: activity.referralLink,
-            location: activity.location,
-            estimatedHours: activity.estimatedHours,
-          }));
           set.status = 200;
-          return { activities: activitiesDTO };
+          return {
+            activities: activities.map((activity) =>
+              mapActivityToActivityDTO(activity)
+            ),
+          };
         }
         set.status = 500;
-        return { message: `Could not get activities due to server error`, error_code: 'internalservererror' };
+        return {
+          message: `Could not get activities due to server error`,
+          error_code: 'internalservererror',
+        };
       },
       {
         response: {
-          200: t.Object({ activities: t.Array(ActivityDTO) }),
+          200: t.Object({ activities: t.Array(GetActivityDTO) }),
           500: InternalServerErrorDTO,
         },
         detail: {
@@ -135,7 +121,7 @@ export const activitiesRoute = (app: Elysia) =>
             name: activityById.name,
             description: activityById.description,
             image: activityById.image,
-            pris: activityById.pris,
+            price: activityById.price,
             persons: activityById.persons,
             category: activityById.category,
             address: activityById.address,
@@ -154,7 +140,7 @@ export const activitiesRoute = (app: Elysia) =>
             name: activityByUrl.name,
             description: activityByUrl.description,
             image: activityByUrl.image,
-            pris: activityByUrl.pris,
+            price: activityByUrl.price,
             persons: activityByUrl.persons,
             category: activityByUrl.category,
             address: activityByUrl.address,
@@ -172,7 +158,7 @@ export const activitiesRoute = (app: Elysia) =>
           idorurl: t.String(),
         }),
         response: {
-          200: ActivityDTO,
+          200: GetActivityDTO,
           404: NotFoundDTO,
           500: InternalServerErrorDTO,
         },
