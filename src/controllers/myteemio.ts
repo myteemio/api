@@ -111,11 +111,11 @@ export const myteemioRoute = (app: Elysia) =>
             const newTeemio: Static<typeof MyTeemioDTO> = {
               ...body,
               status: 'active',
-              activities: body.activities.map((v, i) => {
-                return { ...v, votes: [{ id: '', name: '' }] };
+              activities: body.activities.map((v) => {
+                return { ...v, votes: [] };
               }),
-              dates: body.dates.map((v, i) => {
-                return { ...v, votes: [{ id: '', name: '' }] };
+              dates: body.dates.map((v) => {
+                return { ...v, votes: [] };
               }),
             };
 
