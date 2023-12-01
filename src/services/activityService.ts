@@ -1,5 +1,3 @@
-import { Static } from 'elysia';
-import { GetActivityDTO } from '../controllers/activities';
 import { Activity, ActivityDocument } from '../models/Activity';
 
 export async function getAllActivities() {
@@ -26,4 +24,3 @@ export function makeUrlSafe(name: string) {
   // Convert to lowercase
   return urlSafeName.toLowerCase();
 }
-

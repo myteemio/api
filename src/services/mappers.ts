@@ -46,11 +46,25 @@ export function mapUserToUserDTO(user: UserDocument): Static<typeof getUserDTO> 
 export function mapMyTeemioToMyTeemioDTO(teemio: MyTeemioDocument): Static<typeof MyTeemioDTO> {
   return {
     id: teemio.id,
-    final: teemio.final,
+    final: null,
     status: teemio.status,
     organizer: teemio.organizer,
-    activities: teemio.activities,
-    dates: teemio.dates,
+    activities: teemio.activities.map((v) => {
+      return {
+        activity: v.activity,
+        timeslot: {
+          from: v.timeslot.from.toString(),
+          to: v.timeslot.to.toString(),
+        },
+        votes: v.votes,
+      };
+    }),
+    dates: teemio.dates.map((v) => {
+      return {
+        date: v.date.toString(),
+        votes: v.votes,
+      };
+    }),
     eventinfo: teemio.eventinfo,
   };
 }
