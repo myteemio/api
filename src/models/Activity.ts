@@ -1,11 +1,11 @@
 import mongoose, { Document } from 'mongoose';
 
 const ActivityScheme = new mongoose.Schema({
-  url: {
+  name: {
     type: String,
     required: true,
   },
-  name: {
+  url: {
     type: String,
     required: true,
   },

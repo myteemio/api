@@ -1,4 +1,4 @@
-import { Elysia, NotFoundError, t } from 'elysia';
+import { Elysia, t } from 'elysia';
 import { NotFoundDTO } from '../types/NotFoundDTO';
 import { InternalServerErrorDTO } from '../types/InternalServerErrorDTO';
 import { isAuthenticated } from '../plugins/authPlugin';
@@ -15,8 +15,8 @@ import { mapActivityToActivityDTO } from '../services/mappers';
 
 export const GetActivityDTO = t.Object({
   id: t.String(),
-  url: t.String(),
   name: t.String(),
+  url: t.String(),
   description: t.String(),
   image: t.String(),
   price: t.Number(),

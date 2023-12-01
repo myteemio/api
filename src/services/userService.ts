@@ -43,3 +43,7 @@ function isEmailValid(email: string) {
 
   return true;
 }
+
+export async function getUserById(id: string) {
+  return await User.findById(id);
+}
