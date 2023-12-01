@@ -1,11 +1,13 @@
 import { Static } from 'elysia';
-import { GetActivityDTO } from '../controllers/activities';
 import { ActivityDocument } from '../models/Activity';
 import { UserDocument } from '../models/User';
 import { getUserDTO } from '../controllers/auth';
+import { MyTeemioDocument } from '../models/MyTeemio';
+import { MyTeemioDTO } from '../controllers/myteemio';
+import { ActivityDTO } from '../controllers/activities';
 
 // Function to map Activity to ActivityDTO
-export function mapActivityToActivityDTO(activity: ActivityDocument): Static<typeof GetActivityDTO> {
+export function mapActivityToActivityDTO(activity: ActivityDocument): Static<typeof ActivityDTO> {
   return {
     id: activity.id.toString(),
     url: activity.url,
@@ -38,5 +40,17 @@ export function mapUserToUserDTO(user: UserDocument): Static<typeof getUserDTO> 
     email: user.email,
     phone: user.phone,
     type: user.type,
+  };
+}
+
+export function mapMyTeemioToMyTeemioDTO(teemio: MyTeemioDocument): Static<typeof MyTeemioDTO> {
+  return {
+    id: teemio.id,
+    final: teemio.final,
+    status: teemio.status,
+    organizer: teemio.organizer,
+    activities: teemio.activities,
+    dates: teemio.dates,
+    eventinfo: teemio.eventinfo,
   };
 }

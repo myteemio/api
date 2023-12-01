@@ -4,16 +4,7 @@ import { User } from './User';
 // Define MyTeemioDates Schema
 const myTeemioDatesSchema = new mongoose.Schema({
   date: { type: Date, default: Date.now(), required: true },
-  votes: [
-    {
-      id: {
-        type: Schema.Types.ObjectId,
-        ref: User,
-        required: true,
-      },
-      name: { type: String, required: true },
-    },
-  ], // Assuming votes are user IDs
+  votes: [mongoose.Schema.Types.Mixed], // Assuming votes are either UserID's or names
 });
 
 //Timeslot schema
@@ -32,7 +23,7 @@ const eventInfoSchema = new mongoose.Schema({
 //Final schema
 const finalSchema = new mongoose.Schema({
   date: { type: Date, required: true },
-  activity: {
+  activities: {
     type: mongoose.Schema.Types.Mixed, // For string | Partial<Activity>
     required: true,
   },
@@ -51,7 +42,7 @@ const myTeemioActivitySchema = new mongoose.Schema({
   votes: [
     {
       id: {
-        type: Schema.Types.ObjectId,
+        type: String,
         ref: User,
         required: true,
       },
@@ -69,7 +60,7 @@ const myTeemioSchema = new mongoose.Schema({
   },
   activities: [myTeemioActivitySchema],
   organizer: {
-    type: Schema.Types.ObjectId,
+    type: String,
     ref: User,
     required: true,
   },
@@ -80,7 +71,7 @@ const myTeemioSchema = new mongoose.Schema({
   dates: [myTeemioDatesSchema],
   final: {
     type: finalSchema,
-    required: true,
+    required: false,
   },
 });
 

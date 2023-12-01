@@ -1,26 +1,17 @@
-import { Elysia, t } from 'elysia';
+import { Elysia, Static, t } from 'elysia';
 import { BadRequestDTO } from '../types/BadRequestDTO';
 import { InternalServerErrorDTO } from '../types/InternalServerErrorDTO';
 import { NotFoundDTO } from '../types/NotFoundDTO';
 import { MyTeemio } from '../models/MyTeemio';
-import {
-  findTeemioById,
-  updateTeemioById,
-  updateTeemioStatusById,
-  updateTeemioStatusByUrl,
-} from '../services/myTeemioService';
+import { createTeemio, updateTeemioStatusById, updateTeemioStatusByUrl } from '../services/myTeemioService';
 import { getUserById } from '../services/userService';
-
-const myTeemioUserDTO = t.Object({
-  id: t.String(),
-  name: t.String(),
-});
+import { mapMyTeemioToMyTeemioDTO } from '../services/mappers';
 
 const myTeemioCustomActivityDTO = t.Object({
   name: t.String(),
   description: t.String(),
   image: t.String(),
-  adress: t.Object({
+  address: t.Object({
     address1: t.String(),
     address2: t.Optional(t.Nullable(t.String())),
     zipcode: t.String(),
@@ -29,77 +20,67 @@ const myTeemioCustomActivityDTO = t.Object({
   }),
 });
 
-const myTeemioCustomActivityOrReferenceDTO = t.Union([
-  t.String({ description: 'ID of activity' }),
-  myTeemioCustomActivityDTO,
+const myTeemioCustomActivityOrReferenceWithVotesDTO = t.Object({
+  activity: t.Union([t.String({ description: 'ID of activity' }), myTeemioCustomActivityDTO]),
+  timeslot: t.Object({
+    from: t.Date(),
+    to: t.Date(),
+  }),
+  votes: t.Array(
+    t.Object({
+      id: t.String(),
+      name: t.String(),
+    })
+  ),
+});
+
+const myTeemioCustomActivityOrReferenceWithoutVotesDTO = t.Omit(myTeemioCustomActivityOrReferenceWithVotesDTO, [
+  'votes',
 ]);
 
-const myTeemioActivityDTO = t.Object({
-  activity: myTeemioCustomActivityOrReferenceDTO,
-});
-
-export const createTeemioDTO = t.Object({
-  activities: t.Array(myTeemioActivityDTO),
-  eventinfo: t.Object({
-    name: t.String(),
-    description: t.String(),
-    //TODO: Change back to t.File() when it works
-    logo: t.String(),
-  }),
-  dates: t.Array(t.Date()),
-  organizer: t.Object({
-    id: t.String(),
-    name: t.String(),
-    email: t.String(),
-    phone: t.String(),
-  }),
-});
-
-const returnTeemioDTO = t.Object({
-  id: t.String(),
-  status: t.String(),
-  activities: t.Array(
+const MyTeemioDateWithVote = t.Object({
+  date: t.Date(),
+  votes: t.Array(
     t.Object({
-      activity: myTeemioCustomActivityOrReferenceDTO,
-      timeslot: t.Object({
-        from: t.Date(),
-        to: t.Date(),
-      }),
-      votes: t.Array(myTeemioUserDTO),
+      id: t.String(),
+      name: t.String(),
     })
   ),
-  organizer: myTeemioUserDTO,
+});
+
+const MyTeemioDateWithoutVote = t.Omit(MyTeemioDateWithVote, ['votes']);
+
+export const MyTeemioDTO = t.Object({
+  id: t.Optional(t.String()),
+  status: t.Union([t.Literal('active'), t.Literal('locked'), t.Literal('finalized')]),
+  activities: t.Array(myTeemioCustomActivityOrReferenceWithVotesDTO),
+  organizer: t.String(),
   eventinfo: t.Object({
     name: t.String(),
     description: t.String(),
     logo: t.String(),
   }),
-  dates: t.Array(
-    t.Object({
-      date: t.Date(),
-      votes: t.Array(myTeemioUserDTO),
-    })
+  dates: t.Array(MyTeemioDateWithVote),
+  final: t.Optional(
+    t.Nullable(
+      t.Object({
+        date: t.Date(),
+        activities: myTeemioCustomActivityOrReferenceWithVotesDTO,
+      })
+    )
   ),
-  final: t.Object({
-    date: t.Date(),
-    activity: myTeemioCustomActivityOrReferenceDTO,
-  }),
 });
 
-export const editMyTeemioDTO = t.Object({
-  activities: t.Array(myTeemioActivityDTO),
-  eventinfo: t.Object({
-    name: t.String(),
-    description: t.String(),
-    logo: t.File(),
-  }),
-  dates: t.Array(t.Date()),
-});
+const createTeemioDTO = t.Intersect([
+  t.Omit(MyTeemioDTO, ['id', 'final', 'dates', 'activities', 'status']),
+  t.Object({ dates: t.Array(MyTeemioDateWithoutVote) }),
+  t.Object({ activities: t.Array(myTeemioCustomActivityOrReferenceWithoutVotesDTO) }),
+]);
 
 const finalizeTeemioDTO = t.Object({
   activities: t.Array(
     t.Object({
-      activity: myTeemioCustomActivityOrReferenceDTO,
+      activity: myTeemioCustomActivityOrReferenceWithVotesDTO,
     })
   ),
   date: t.Date(),
@@ -109,7 +90,7 @@ const finalizeTeemioDTO = t.Object({
 const voteTeemioDTO = t.Object({
   activitiesVotedOn: t.Array(
     t.Object({
-      activity: myTeemioCustomActivityOrReferenceDTO,
+      activity: myTeemioCustomActivityOrReferenceWithVotesDTO,
     })
   ),
   datesVotedOn: t.Array(t.Date()),
@@ -124,24 +105,22 @@ export const myteemioRoute = (app: Elysia) =>
     app.post(
       '/create',
       async ({ body, set }) => {
+        console.log('test123');
         if (body) {
           try {
-            const newTeemio = new MyTeemio({
+            const newTeemio: Static<typeof MyTeemioDTO> = {
+              ...body,
               status: 'active',
-              activities: body.activities,
-              eventinfo: body.eventinfo,
-              dates: body.dates,
-              organizer: body.organizer.id,
-              final: {
-                date: new Date(),
-                activity: 'test',
-              },
-            });
+              activities: body.activities.map((v, i) => {
+                return { ...v, votes: [{ id: '', name: '' }] };
+              }),
+              dates: body.dates.map((v, i) => {
+                return { ...v, votes: [{ id: '', name: '' }] };
+              }),
+            };
 
-            newTeemio.save();
-            // Set success status and return the saved user's ID
-            set.status = 201;
-            return { id: newTeemio.organizer._id.toString() };
+            const createdTeemio = await createTeemio(newTeemio);
+            return mapMyTeemioToMyTeemioDTO(createdTeemio);
           } catch (error) {
             set.status = 400;
             return {
@@ -159,7 +138,7 @@ export const myteemioRoute = (app: Elysia) =>
       {
         body: createTeemioDTO,
         response: {
-          201: t.Object({ id: t.String({ default: 'ID of created event' }) }), // ID of the teemio
+          200: MyTeemioDTO,
           400: BadRequestDTO,
           500: InternalServerErrorDTO,
         },
@@ -170,97 +149,93 @@ export const myteemioRoute = (app: Elysia) =>
       }
     );
 
-    app.get(
-      '/:idorurl',
-      async ({ params: { idorurl }, set }) => {
-        try {
-          const teemioById = await findTeemioById(idorurl);
-          if (teemioById) {
-            set.status = 200;
-            return {
-              id: idorurl,
-              status: teemioById.status,
-              activities: teemioById.activities.map((activity) => ({
-                ...activity,
-                votes: activity.votes.map((vote) => ({
-                  id: vote.id.toString(),
-                  name: vote.name,
-                })),
-              })),
-              organizer: {
-                id: teemioById.organizer.toString(),
-                name:
-                  (await getUserById(teemioById.organizer.toString()))?.name ||
-                  '',
-              },
-              eventinfo: teemioById.eventinfo,
-              dates: teemioById.dates.map((date) => ({
-                ...date,
-                votes: date.votes.map((vote) => ({
-                  id: vote.id.toString(),
-                  name: vote.name,
-                })),
-              })),
-              final: teemioById.final,
-            };
-          }
+    // app.get(
+    //   '/:idorurl',
+    //   async ({ params: { idorurl }, set }) => {
+    //     try {
+    //       const teemioById = await findTeemioById(idorurl);
+    //       if (teemioById) {
+    //         set.status = 200;
+    //         return {
+    //           id: idorurl,
+    //           status: teemioById.status,
+    //           activities: teemioById.activities.map((activity) => ({
+    //             ...activity,
+    //             votes: activity.votes.map((vote) => ({
+    //               id: vote.id.toString(),
+    //               name: vote.name,
+    //             })),
+    //           })),
+    //           organizer: {
+    //             id: teemioById.organizer.toString(),
+    //             name: (await getUserById(teemioById.organizer.toString()))?.name || '',
+    //           },
+    //           eventinfo: teemioById.eventinfo,
+    //           dates: teemioById.dates.map((date) => ({
+    //             ...date,
+    //             votes: date.votes.map((vote) => ({
+    //               id: vote.id.toString(),
+    //               name: vote.name,
+    //             })),
+    //           })),
+    //           final: teemioById.final,
+    //         };
+    //       }
 
-          const teemioByUrl = await findTeemioById(idorurl);
+    //       const teemioByUrl = await findTeemioById(idorurl);
 
-          if (teemioByUrl) {
-            set.status = 200;
-            return {
-              id: idorurl,
-              status: teemioByUrl.status,
-              activities: teemioByUrl.activities.map((activity) => ({
-                ...activity,
-                votes: activity.votes.map((vote) => ({
-                  id: vote.id.toString(),
-                  name: vote.name,
-                })),
-              })),
-              organizer: {
-                id: teemioByUrl.organizer.toString(),
-                name:
-                  (await getUserById(teemioByUrl.organizer.toString()))?.name ||
-                  '',
-              },
-              eventinfo: teemioByUrl.eventinfo,
-              dates: teemioByUrl.dates.map((date) => ({
-                ...date,
-                votes: date.votes.map((vote) => ({
-                  id: vote.id.toString(),
-                  name: vote.name,
-                })),
-              })),
-              final: teemioByUrl.final,
-            };
-          }
-        } catch (error) {
-          set.status = 404;
-          return {
-            message: 'Teemio not found. Make sure the ID or URL is correct',
-            error_code: 'teemionotfound',
-          };
-        }
-        set.status = 500;
-        return {
-          message: 'There was an error with the request',
-          error_code: 'internalservererror',
-        };
-      },
-      {
-        response: {
-          200: returnTeemioDTO,
-          404: NotFoundDTO,
-          500: InternalServerErrorDTO,
-        },
-        detail: {
-          summary: 'Get a single Teemio event',
-          tags: ['My Teemio'],
-        },
-      }
-    );
+    //       if (teemioByUrl) {
+    //         set.status = 200;
+    //         return {
+    //           id: idorurl,
+    //           status: teemioByUrl.status,
+    //           activities: teemioByUrl.activities.map((activity) => ({
+    //             ...activity,
+    //             votes: activity.votes.map((vote) => ({
+    //               id: vote.id.toString(),
+    //               name: vote.name,
+    //             })),
+    //           })),
+    //           organizer: {
+    //             id: teemioByUrl.organizer.toString(),
+    //             name: (await getUserById(teemioByUrl.organizer.toString()))?.name || '',
+    //           },
+    //           eventinfo: teemioByUrl.eventinfo,
+    //           dates: teemioByUrl.dates.map((date) => ({
+    //             ...date,
+    //             votes: date.votes.map((vote) => ({
+    //               id: vote.id.toString(),
+    //               name: vote.name,
+    //             })),
+    //           })),
+    //           final: teemioByUrl.final,
+    //         };
+    //       }
+    //     } catch (error) {
+    //       set.status = 404;
+    //       return {
+    //         message: 'Teemio not found. Make sure the ID or URL is correct',
+    //         error_code: 'teemionotfound',
+    //       };
+    //     }
+    //     set.status = 500;
+    //     return {
+    //       message: 'There was an error with the request',
+    //       error_code: 'internalservererror',
+    //     };
+    //   },
+    //   {
+    //     response: {
+    //       200: MyTeemioDTO,
+    //       404: NotFoundDTO,
+    //       500: InternalServerErrorDTO,
+    //     },
+    //     detail: {
+    //       summary: 'Get a single Teemio event',
+    //       tags: ['My Teemio'],
+    //     },
+    //   }
+    // );
 
     app.put(
       '/:idorurl',
@@ -269,9 +244,9 @@ export const myteemioRoute = (app: Elysia) =>
         return { message: 'Not implemented', error_code: 'notimplemented' };
       },
       {
-        body: editMyTeemioDTO,
+        body: createTeemioDTO,
         response: {
-          200: returnTeemioDTO,
+          200: MyTeemioDTO,
           404: NotFoundDTO,
           500: InternalServerErrorDTO,
         },
@@ -305,19 +280,13 @@ export const myteemioRoute = (app: Elysia) =>
       '/:idorurl/status',
       async ({ body, set, params: { idorurl } }) => {
         try {
-          const updateStatusById = await updateTeemioStatusById(
-            idorurl,
-            body.newstatus
-          );
+          const updateStatusById = await updateTeemioStatusById(idorurl, body.newstatus);
           if (updateStatusById) {
             set.status = 200;
             return { message: 'Status successfully updated' };
           }
 
-          const updateStatusByUrl = await updateTeemioStatusByUrl(
-            idorurl,
-            body.newstatus
-          );
+          const updateStatusByUrl = await updateTeemioStatusByUrl(idorurl, body.newstatus);
           if (updateStatusByUrl) {
             set.status = 200;
             return { message: 'Status successfully updated' };
@@ -361,7 +330,7 @@ export const myteemioRoute = (app: Elysia) =>
       {
         body: finalizeTeemioDTO,
         response: {
-          200: returnTeemioDTO,
+          200: MyTeemioDTO,
           404: NotFoundDTO,
           500: InternalServerErrorDTO,
         },
@@ -381,7 +350,7 @@ export const myteemioRoute = (app: Elysia) =>
       {
         body: voteTeemioDTO,
         response: {
-          200: returnTeemioDTO,
+          200: MyTeemioDTO,
           404: NotFoundDTO,
           500: InternalServerErrorDTO,
         },
