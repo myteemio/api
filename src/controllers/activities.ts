@@ -13,7 +13,7 @@ import { BadRequestDTO } from '../types/BadRequestDTO';
 import mongoose from 'mongoose';
 import { mapActivityToActivityDTO } from '../services/mappers';
 
-export const GetActivityDTO = t.Object({
+export const ActivityDTO = t.Object({
   id: t.String(),
   name: t.String(),
   url: t.String(),
@@ -37,7 +37,9 @@ export const GetActivityDTO = t.Object({
   estimatedHours: t.Number(),
 });
 
-export const createActivityDTO = t.Omit(GetActivityDTO, ['id']);
+const getActivityDTO = ActivityDTO;
+
+const postActivityDTO = t.Omit(ActivityDTO, ['id']);
 
 export const activitiesRoute = new Elysia({ name: 'routes:activities' }).group('/activities', (app) => {
   // /activites
@@ -49,7 +51,7 @@ export const activitiesRoute = new Elysia({ name: 'routes:activities' }).group('
     },
     {
       response: {
-        200: t.Object({ activities: t.Array(GetActivityDTO) }),
+        200: t.Object({ activities: t.Array(getActivityDTO) }),
         500: InternalServerErrorDTO,
       },
       detail: {
@@ -90,7 +92,7 @@ export const activitiesRoute = new Elysia({ name: 'routes:activities' }).group('
         idorurl: t.String(),
       }),
       response: {
-        200: GetActivityDTO,
+        200: getActivityDTO,
         404: NotFoundDTO,
         500: InternalServerErrorDTO,
       },
@@ -113,9 +115,9 @@ export const activitiesRoute = new Elysia({ name: 'routes:activities' }).group('
       return mapActivityToActivityDTO(newActivity);
     },
     {
-      body: createActivityDTO,
+      body: postActivityDTO,
       response: {
-        200: GetActivityDTO,
+        200: getActivityDTO,
         400: BadRequestDTO,
         500: InternalServerErrorDTO,
       },
