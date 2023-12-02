@@ -16,7 +16,7 @@ export const getUserDTO = t.Object({
   type: t.String(),
 });
 
-export const authRoute = new Elysia({ name: 'routes:auth' }).group('/auth', (app) =>
+export const AuthController = new Elysia({ name: 'routes:auth' }).group('/auth', (app) =>
   app
     .use(
       jwt({
@@ -64,30 +64,6 @@ export const authRoute = new Elysia({ name: 'routes:auth' }).group('/auth', (app
         detail: {
           summary: 'Sign in using email',
           tags: ['Auth'],
-        },
-      }
-    )
-    .use(isAuthenticated({ type: 'All' }))
-    .get(
-      '/account',
-      ({ user, set }) => {
-        if (!user) {
-          set.status = 404;
-          return { message: 'User not found!', error_code: 'nouseronaccount' };
-        }
-
-        return mapUserToUserDTO(user);
-      },
-      {
-        response: {
-          200: getUserDTO,
-          404: NotFoundDTO,
-          500: InternalServerErrorDTO,
-        },
-        detail: {
-          summary: 'View info on the currently logged in account',
-          tags: ['Auth'],
-          security: [{ AccessToken: [] }],
         },
       }
     )

@@ -1,11 +1,11 @@
 import { Elysia } from 'elysia';
 import { swagger } from '@elysiajs/swagger';
-import { activitiesRoute } from './controllers/activities';
-import { myteemioRoute } from './controllers/myteemio';
+import { ActivityController } from './controllers/ActivityController';
+import { MyTeemioController } from './controllers/MyTeemioController';
 import cors from '@elysiajs/cors';
 import { helmet } from 'elysia-helmet';
 import jwt from '@elysiajs/jwt';
-import { authRoute } from './controllers/auth';
+import { AuthController } from './controllers/AuthController';
 
 // Check for ENV variables
 if (!process.env.JWT_SECRET) {
@@ -22,6 +22,7 @@ if (!process.env.RESEND_API_KEY) {
 
 // Setup db
 import './db/setupMongoDB';
+import { UserController } from './controllers/UserController';
 
 // Setup the Web API
 const app = new Elysia({ prefix: '/api' });
@@ -60,6 +61,10 @@ app.use(
           description: 'Endpoints for everything related to authentication',
         },
         {
+          name: 'User',
+          description: 'All endpoints related to user data',
+        },
+        {
           name: 'default',
           description: 'All other endpoints',
         },
@@ -79,9 +84,10 @@ app.use(
 );
 
 // Setup controllers
-app.use(activitiesRoute);
-app.use(myteemioRoute);
-app.use(authRoute);
+app.use(ActivityController);
+app.use(MyTeemioController);
+app.use(AuthController);
+app.use(UserController);
 
 // Start the server
 app.listen(process.env.PORT ?? 3001);

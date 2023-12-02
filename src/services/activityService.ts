@@ -8,8 +8,8 @@ export async function findActivityById(id: string) {
   return await Activity.findById(id);
 }
 
-export async function activityExists(activityIds: (string | undefined)[]) {
-  return await Activity.exists({ _id: { $in: activityIds } });
+export async function activityExists(activityId: string | string[]) {
+  return await Activity.exists({ _id: { $in: typeof activityId === 'string' ? [activityId] : activityId } });
 }
 
 export async function findActivityByUrl(url: string) {

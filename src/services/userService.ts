@@ -1,4 +1,4 @@
-import { User } from '../models/User';
+import { User, UserDocument } from '../models/User';
 
 export async function createNewUser(user: User) {
   if (user.email && !isEmailValid(user.email)) {
@@ -17,6 +17,13 @@ export async function findUserByEmail(email: string) {
 
 export async function findUserById(id: string) {
   return await User.findById(id);
+}
+
+export function isOwnerOfTeemioOrAdmin(organizerId: string, user: UserDocument) {
+  if (user.type !== 'admin' && organizerId !== user.id) {
+    return false;
+  }
+  return true;
 }
 
 function isEmailValid(email: string) {

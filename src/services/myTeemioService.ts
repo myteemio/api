@@ -1,11 +1,12 @@
 import { Static } from 'elysia';
 import {
+  MyTeemioActivitiesWithVotes,
+  MyTeemioActivitiesWithoutVotes,
   MyTeemioDTO,
-  activitiesDTO,
-  createTeemioDTO,
+  MyTeemioStatusEnum,
   finalizeTeemioDTO,
   updateTeemioDTO,
-} from '../controllers/myteemio';
+} from '../controllers/MyTeemioController';
 import { MyTeemio } from '../models/MyTeemio';
 import dayjs, { Dayjs } from 'dayjs';
 
@@ -17,36 +18,19 @@ export async function findTeemioByUrl(url: string) {
   return await MyTeemio.findOne({ url: url });
 }
 
-export async function updateTeemioStatusById(id: string, status: string) {
-  return await MyTeemio.findByIdAndUpdate(id, { status: status });
-}
-
-export async function updateTeemioStatusByUrl(url: string, status: string) {
-  return await MyTeemio.findOneAndUpdate({ url: url }, { status: status });
+export async function updateTeemioStatusById(id: string, newstatus: Static<typeof MyTeemioStatusEnum>) {
+  return await MyTeemio.findByIdAndUpdate(id, { status: newstatus });
 }
 
 export async function createTeemio(teemio: Static<typeof MyTeemioDTO>) {
   return await new MyTeemio(teemio).save();
 }
 
-export async function updateTeemioById(
-  id: string,
-  teemio: Static<typeof updateTeemioDTO>
-) {
+export async function updateTeemioById(id: string, teemio: Static<typeof updateTeemioDTO>) {
   return await MyTeemio.findByIdAndUpdate(id, teemio, { new: true });
 }
 
-export async function updateTeemioByUrl(
-  url: string,
-  teemio: Static<typeof updateTeemioDTO>
-) {
-  return await MyTeemio.findOneAndUpdate({ url: url }, teemio, { new: true });
-}
-
-export async function finalizeTeemio(
-  idorurl: string,
-  teemio: Static<typeof finalizeTeemioDTO>
-) {
+export async function finalizeTeemio(idorurl: string, teemio: Static<typeof finalizeTeemioDTO>) {
   return await MyTeemio.findByIdAndUpdate(
     idorurl,
     {
@@ -60,13 +44,13 @@ export async function finalizeTeemio(
   );
 }
 
-export function checkTimeSlots(teemio: Static<typeof activitiesDTO>): boolean {
+export function IsActivityTimeslotsValid(
+  activities: Static<typeof MyTeemioActivitiesWithVotes> | Static<typeof MyTeemioActivitiesWithoutVotes>
+): boolean {
   let currentFrom: Dayjs | undefined;
   let currentTo: Dayjs | undefined;
-  let activitiesSorted = teemio.activities.sort((a, b) =>
-    dayjs(new Date(a.timeslot.from)).isAfter(dayjs(new Date(b.timeslot.from)))
-      ? 1
-      : -1
+  let activitiesSorted = activities.sort((a, b) =>
+    dayjs(new Date(a.timeslot.from)).isAfter(dayjs(new Date(b.timeslot.from))) ? 1 : -1
   );
   for (const activity of activitiesSorted) {
     const from = dayjs(new Date(activity.timeslot.from));

@@ -41,7 +41,7 @@ const getActivityDTO = ActivityDTO;
 
 const postActivityDTO = t.Omit(ActivityDTO, ['id']);
 
-export const activitiesRoute = new Elysia({ name: 'routes:activities' }).group('/activities', (app) => {
+export const ActivityController = new Elysia({ name: 'routes:activities' }).group('/activities', (app) => {
   // /activites
   app.get(
     '/',
