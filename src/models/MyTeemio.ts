@@ -61,7 +61,7 @@ const myTeemioSchema = new mongoose.Schema({
   activities: [myTeemioActivitySchema],
   organizer: {
     type: String,
-    ref: User,
+    //Cant make put work with user:ref
     required: true,
   },
   eventinfo: {

@@ -1,5 +1,9 @@
 import { Static } from 'elysia';
-import { MyTeemioDTO, createTeemioDTO } from '../controllers/myteemio';
+import {
+  MyTeemioDTO,
+  createTeemioDTO,
+  updateTeemioDTO,
+} from '../controllers/myteemio';
 import { MyTeemio } from '../models/MyTeemio';
 import dayjs, { Dayjs } from 'dayjs';
 
@@ -21,6 +25,10 @@ export async function updateTeemioStatusByUrl(url: string, status: string) {
 
 export async function createTeemio(teemio: Static<typeof MyTeemioDTO>) {
   return await new MyTeemio(teemio).save();
+}
+
+export async function updateTeemio(teemio: Static<typeof updateTeemioDTO>) {
+  return await MyTeemio.findByIdAndUpdate(teemio.id, teemio, { new: true });
 }
 
 export function checkTimeSlots(

@@ -5,6 +5,9 @@ import { NotFoundDTO } from '../types/NotFoundDTO';
 import {
   checkTimeSlots,
   createTeemio,
+  findTeemioById,
+  findTeemioByUrl,
+  updateTeemio,
   updateTeemioStatusById,
   updateTeemioStatusByUrl,
 } from '../services/myTeemioService';
@@ -93,6 +96,11 @@ export const createTeemioDTO = t.Object({
     email: t.String(),
     phone: t.String(),
   }),
+});
+
+export const updateTeemioDTO = t.Object({
+  id: t.String(),
+  ...t.Omit(createTeemioDTO, ['organizer']).properties,
 });
 
 const finalizeTeemioDTO = t.Object({
@@ -217,13 +225,37 @@ export const myteemioRoute = (app: Elysia) =>
     app.put(
       '/:idorurl',
       async ({ body, set, params: { idorurl } }) => {
+        //Check if teemio exists
+        const teemioById = await findTeemioById(idorurl);
+        const teemioByUrl = await findTeemioByUrl(idorurl);
+
+        if (!teemioById && !teemioByUrl) {
+          set.status = 404;
+          return { message: 'Teemio not found', error_code: 'teemionotfound' };
+        }
+
+        const updatedTeemio = await updateTeemio(body);
+
+        try {
+          if (updatedTeemio) {
+            set.status = 200;
+            return mapMyTeemioToMyTeemioDTO(updatedTeemio);
+          }
+        } catch (error) {
+          set.status = 400;
+          return { message: 'Error updating teemio', error_code: 'badrequest' };
+        }
         set.status = 500;
-        return { message: 'Not implemented', error_code: 'notimplemented' };
+        return {
+          message: 'There was an error with the request',
+          error_code: 'internalservererror',
+        };
       },
       {
-        body: createTeemioDTO,
+        body: updateTeemioDTO,
         response: {
           200: MyTeemioDTO,
+          400: BadRequestDTO,
           404: NotFoundDTO,
           500: InternalServerErrorDTO,
         },

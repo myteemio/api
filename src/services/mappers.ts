@@ -5,9 +5,12 @@ import { getUserDTO } from '../controllers/auth';
 import { MyTeemioDocument } from '../models/MyTeemio';
 import { MyTeemioDTO } from '../controllers/myteemio';
 import { ActivityDTO } from '../controllers/activities';
+import { findUserById } from './userService';
 
 // Function to map Activity to ActivityDTO
-export function mapActivityToActivityDTO(activity: ActivityDocument): Static<typeof ActivityDTO> {
+export function mapActivityToActivityDTO(
+  activity: ActivityDocument
+): Static<typeof ActivityDTO> {
   return {
     id: activity.id.toString(),
     url: activity.url,
@@ -33,7 +36,9 @@ export function mapActivityToActivityDTO(activity: ActivityDocument): Static<typ
   };
 }
 
-export function mapUserToUserDTO(user: UserDocument): Static<typeof getUserDTO> {
+export function mapUserToUserDTO(
+  user: UserDocument
+): Static<typeof getUserDTO> {
   return {
     id: user.id,
     name: user.name,
@@ -43,7 +48,9 @@ export function mapUserToUserDTO(user: UserDocument): Static<typeof getUserDTO> 
   };
 }
 
-export function mapMyTeemioToMyTeemioDTO(teemio: MyTeemioDocument): Static<typeof MyTeemioDTO> {
+export function mapMyTeemioToMyTeemioDTO(
+  teemio: MyTeemioDocument
+): Static<typeof MyTeemioDTO> {
   return {
     id: teemio.id,
     final: null,
