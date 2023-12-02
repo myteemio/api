@@ -2,10 +2,15 @@ import { Elysia, Static, t } from 'elysia';
 import { BadRequestDTO } from '../types/BadRequestDTO';
 import { InternalServerErrorDTO } from '../types/InternalServerErrorDTO';
 import { NotFoundDTO } from '../types/NotFoundDTO';
-import { MyTeemio } from '../models/MyTeemio';
-import { createTeemio, updateTeemioStatusById, updateTeemioStatusByUrl } from '../services/myTeemioService';
-import { createNewUser, findUserByEmail, getUserById } from '../services/userService';
+import {
+  checkTimeSlots,
+  createTeemio,
+  updateTeemioStatusById,
+  updateTeemioStatusByUrl,
+} from '../services/myTeemioService';
+import { createNewUser, findUserByEmail } from '../services/userService';
 import { mapMyTeemioToMyTeemioDTO } from '../services/mappers';
+import { activityExists } from '../services/activityService';
 
 const myTeemioCustomActivityDTO = t.Object({
   name: t.String(),
@@ -21,10 +26,13 @@ const myTeemioCustomActivityDTO = t.Object({
 });
 
 const myTeemioCustomActivityOrReferenceWithVotesDTO = t.Object({
-  activity: t.Union([t.String({ description: 'ID of activity' }), myTeemioCustomActivityDTO]),
+  activity: t.Union([
+    t.String({ description: 'ID of activity' }),
+    myTeemioCustomActivityDTO,
+  ]),
   timeslot: t.Object({
-    from: t.String(),
-    to: t.String(),
+    from: t.String({ format: 'date-time' }),
+    to: t.String({ format: 'date-time' }),
   }),
   votes: t.Array(
     t.Object({
@@ -34,12 +42,13 @@ const myTeemioCustomActivityOrReferenceWithVotesDTO = t.Object({
   ),
 });
 
-const myTeemioCustomActivityOrReferenceWithoutVotesDTO = t.Omit(myTeemioCustomActivityOrReferenceWithVotesDTO, [
-  'votes',
-]);
+const myTeemioCustomActivityOrReferenceWithoutVotesDTO = t.Omit(
+  myTeemioCustomActivityOrReferenceWithVotesDTO,
+  ['votes']
+);
 
 const MyTeemioDateWithVote = t.Object({
-  date: t.String(),
+  date: t.String({ format: 'date' }),
   votes: t.Array(
     t.Object({
       id: t.String(),
@@ -52,7 +61,11 @@ const MyTeemioDateWithoutVote = t.Omit(MyTeemioDateWithVote, ['votes']);
 
 export const MyTeemioDTO = t.Object({
   id: t.Optional(t.String()),
-  status: t.Union([t.Literal('active'), t.Literal('locked'), t.Literal('finalized')]),
+  status: t.Union([
+    t.Literal('active'),
+    t.Literal('locked'),
+    t.Literal('finalized'),
+  ]),
   activities: t.Array(myTeemioCustomActivityOrReferenceWithVotesDTO),
   organizer: t.String(),
   eventinfo: t.Object({
@@ -64,14 +77,14 @@ export const MyTeemioDTO = t.Object({
   final: t.Optional(
     t.Nullable(
       t.Object({
-        date: t.String(),
+        date: t.String({ format: 'date' }),
         activities: myTeemioCustomActivityOrReferenceWithVotesDTO,
       })
     )
   ),
 });
 
-const createTeemioDTO = t.Object({
+export const createTeemioDTO = t.Object({
   ...t.Omit(MyTeemioDTO, ['id', 'final', 'status']).properties,
   dates: t.Array(MyTeemioDateWithoutVote),
   activities: t.Array(myTeemioCustomActivityOrReferenceWithoutVotesDTO),
@@ -119,17 +132,45 @@ export const myteemioRoute = (app: Elysia) =>
 
             if (!existingUser) {
               // Create new user
-              const newUser = await createNewUser({ ...body.organizer, type: 'user' });
+              const newUser = await createNewUser({
+                ...body.organizer,
+                type: 'user',
+              });
               userid = newUser.id;
             }
 
             if (!userid) {
               set.status = 500;
-              return { message: 'Error creating Teemio', error_code: 'internalservererror' };
+              return {
+                message: 'Error creating Teemio',
+                error_code: 'internalservererror',
+              };
             }
 
             // Check if activity id exists
+            const activityIds = body.activities.map((v) => {
+              if (typeof v.activity === 'string') {
+                return v.activity;
+              }
+            });
+            const exists = await activityExists(activityIds);
+            if (!exists) {
+              set.status = 400;
+              return {
+                message: 'Activity does not exist',
+                error_code: 'activitydoesnotexist',
+              };
+            }
+
             // Check if timeslots make sense
+            if (!checkTimeSlots(body)) {
+              set.status = 400;
+              return {
+                message:
+                  'Make sure activities begin before they end and that they do not overlap',
+                error_code: 'invalidtimeslots',
+              };
+            }
 
             const newTeemio: Static<typeof MyTeemioDTO> = {
               ...body,
@@ -216,13 +257,19 @@ export const myteemioRoute = (app: Elysia) =>
       '/:idorurl/status',
       async ({ body, set, params: { idorurl } }) => {
         try {
-          const updateStatusById = await updateTeemioStatusById(idorurl, body.newstatus);
+          const updateStatusById = await updateTeemioStatusById(
+            idorurl,
+            body.newstatus
+          );
           if (updateStatusById) {
             set.status = 200;
             return { message: 'Status successfully updated' };
           }
 
-          const updateStatusByUrl = await updateTeemioStatusByUrl(idorurl, body.newstatus);
+          const updateStatusByUrl = await updateTeemioStatusByUrl(
+            idorurl,
+            body.newstatus
+          );
           if (updateStatusByUrl) {
             set.status = 200;
             return { message: 'Status successfully updated' };
