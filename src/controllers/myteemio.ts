@@ -5,15 +5,16 @@ import { NotFoundDTO } from '../types/NotFoundDTO';
 import {
   checkTimeSlots,
   createTeemio,
-  findTeemioById,
-  findTeemioByUrl,
-  updateTeemio,
+  finalizeTeemio,
+  updateTeemioById,
+  updateTeemioByUrl,
   updateTeemioStatusById,
   updateTeemioStatusByUrl,
 } from '../services/myTeemioService';
 import { createNewUser, findUserByEmail } from '../services/userService';
 import { mapMyTeemioToMyTeemioDTO } from '../services/mappers';
 import { activityExists } from '../services/activityService';
+import mongoose from 'mongoose';
 
 const myTeemioCustomActivityDTO = t.Object({
   name: t.String(),
@@ -99,11 +100,10 @@ export const createTeemioDTO = t.Object({
 });
 
 export const updateTeemioDTO = t.Object({
-  id: t.String(),
   ...t.Omit(createTeemioDTO, ['organizer']).properties,
 });
 
-const finalizeTeemioDTO = t.Object({
+export const finalizeTeemioDTO = t.Object({
   activities: t.Array(
     t.Object({
       activity: myTeemioCustomActivityOrReferenceWithVotesDTO,
@@ -111,6 +111,10 @@ const finalizeTeemioDTO = t.Object({
   ),
   date: t.String(),
   sendInvites: t.Boolean(),
+});
+
+export const activitiesDTO = t.Object({
+  activities: t.Array(myTeemioCustomActivityOrReferenceWithoutVotesDTO),
 });
 
 const voteTeemioDTO = t.Object({
@@ -226,24 +230,34 @@ export const myteemioRoute = (app: Elysia) =>
       '/:idorurl',
       async ({ body, set, params: { idorurl } }) => {
         //Check if teemio exists
-        const teemioById = await findTeemioById(idorurl);
-        const teemioByUrl = await findTeemioByUrl(idorurl);
-
-        if (!teemioById && !teemioByUrl) {
-          set.status = 404;
-          return { message: 'Teemio not found', error_code: 'teemionotfound' };
-        }
-
-        const updatedTeemio = await updateTeemio(body);
-
-        try {
-          if (updatedTeemio) {
-            set.status = 200;
-            return mapMyTeemioToMyTeemioDTO(updatedTeemio);
+        if (mongoose.isValidObjectId(idorurl)) {
+          try {
+            const updatedTeemio = await updateTeemioById(idorurl, body);
+            if (updatedTeemio) {
+              set.status = 200;
+              return mapMyTeemioToMyTeemioDTO(updatedTeemio);
+            }
+          } catch (error) {
+            set.status = 404;
+            return {
+              message: 'Teemio not found',
+              error_code: 'teemionotfound',
+            };
           }
-        } catch (error) {
-          set.status = 400;
-          return { message: 'Error updating teemio', error_code: 'badrequest' };
+        } else {
+          try {
+            const updatedTeemio = await updateTeemioByUrl(idorurl, body);
+            if (updatedTeemio) {
+              set.status = 200;
+              return mapMyTeemioToMyTeemioDTO(updatedTeemio);
+            }
+          } catch (error) {
+            set.status = 404;
+            return {
+              message: 'Teemio not found',
+              error_code: 'teemionotfound',
+            };
+          }
         }
         set.status = 500;
         return {
@@ -288,7 +302,7 @@ export const myteemioRoute = (app: Elysia) =>
     app.put(
       '/:idorurl/status',
       async ({ body, set, params: { idorurl } }) => {
-        try {
+        if (mongoose.isValidObjectId(idorurl)) {
           const updateStatusById = await updateTeemioStatusById(
             idorurl,
             body.newstatus
@@ -297,7 +311,7 @@ export const myteemioRoute = (app: Elysia) =>
             set.status = 200;
             return { message: 'Status successfully updated' };
           }
-
+        } else {
           const updateStatusByUrl = await updateTeemioStatusByUrl(
             idorurl,
             body.newstatus
@@ -306,18 +320,11 @@ export const myteemioRoute = (app: Elysia) =>
             set.status = 200;
             return { message: 'Status successfully updated' };
           }
-        } catch (error) {
-          set.status = 404;
-          return {
-            message: 'Teemio not found. Make sure the ID or URL is correct',
-            error_code: 'teemionotfound',
-          };
         }
-
-        set.status = 500;
+        set.status = 404;
         return {
-          message: 'An error ocurred with the server',
-          error_code: 'internalservererror',
+          message: 'Teemio not found. Make sure the ID or URL is correct',
+          error_code: 'teemionotfound',
         };
       },
       {
@@ -338,9 +345,33 @@ export const myteemioRoute = (app: Elysia) =>
 
     app.post(
       '/:idorurl/finalize',
-      ({ set }) => {
-        set.status = 500;
-        return { message: 'Not implemented', error_code: 'notimplemented' };
+      async ({ body, set, params: { idorurl } }) => {
+        if (mongoose.isValidObjectId(idorurl)) {
+          try {
+            const finalize = await finalizeTeemio(idorurl, body);
+            if (finalize) {
+              set.status = 200;
+              return mapMyTeemioToMyTeemioDTO(finalize);
+            } else {
+              set.status = 404;
+              return {
+                message: 'Teemio not found',
+                error_code: 'teemionotfound',
+              };
+            }
+          } catch (error) {
+            set.status = 500;
+            return {
+              message: 'An error ocurred with the server',
+              error_code: 'internalservererror',
+            };
+          }
+        }
+        set.status = 404;
+        return {
+          message: 'Teemio not found. Make sure the ID or URL is correct',
+          error_code: 'teemionotfound',
+        };
       },
       {
         body: finalizeTeemioDTO,

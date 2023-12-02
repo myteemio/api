@@ -24,7 +24,7 @@ const eventInfoSchema = new mongoose.Schema({
 const finalSchema = new mongoose.Schema({
   date: { type: Date, required: true },
   activities: {
-    type: mongoose.Schema.Types.Mixed, // For string | Partial<Activity>
+    type: [mongoose.Schema.Types.Mixed], // For string | Partial<Activity>
     required: true,
   },
 });

@@ -1,7 +1,9 @@
 import { Static } from 'elysia';
 import {
   MyTeemioDTO,
+  activitiesDTO,
   createTeemioDTO,
+  finalizeTeemioDTO,
   updateTeemioDTO,
 } from '../controllers/myteemio';
 import { MyTeemio } from '../models/MyTeemio';
@@ -27,13 +29,38 @@ export async function createTeemio(teemio: Static<typeof MyTeemioDTO>) {
   return await new MyTeemio(teemio).save();
 }
 
-export async function updateTeemio(teemio: Static<typeof updateTeemioDTO>) {
-  return await MyTeemio.findByIdAndUpdate(teemio.id, teemio, { new: true });
+export async function updateTeemioById(
+  id: string,
+  teemio: Static<typeof updateTeemioDTO>
+) {
+  return await MyTeemio.findByIdAndUpdate(id, teemio, { new: true });
 }
 
-export function checkTimeSlots(
-  teemio: Static<typeof createTeemioDTO>
-): boolean {
+export async function updateTeemioByUrl(
+  url: string,
+  teemio: Static<typeof updateTeemioDTO>
+) {
+  return await MyTeemio.findOneAndUpdate({ url: url }, teemio, { new: true });
+}
+
+export async function finalizeTeemio(
+  idorurl: string,
+  teemio: Static<typeof finalizeTeemioDTO>
+) {
+  return await MyTeemio.findByIdAndUpdate(
+    idorurl,
+    {
+      final: {
+        date: teemio.date,
+        activities: teemio.activities,
+      },
+      status: 'finalized',
+    },
+    { new: true }
+  );
+}
+
+export function checkTimeSlots(teemio: Static<typeof activitiesDTO>): boolean {
   let currentFrom: Dayjs | undefined;
   let currentTo: Dayjs | undefined;
   let activitiesSorted = teemio.activities.sort((a, b) =>
