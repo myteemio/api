@@ -52,6 +52,11 @@ export async function updateTeemioDateVotesById(
   return await teemio?.save();
 }
 
+//Scuffed function to check if activity is custom activity. Would like to not do this if possible.
+function isActivityWithCustomName(activity: any): activity is { name: string } {
+  return activity && typeof activity === 'object' && 'name' in activity;
+}
+
 export async function updateTeemioActivityVotesById(
   id: string,
   user: UserDocument | null,
@@ -71,11 +76,8 @@ export async function updateTeemioActivityVotesById(
       //Activity is custom activity
       const activityName = activityVotedFor.activity.name;
       index = teemio?.activities.findIndex((activity) => {
-        if (activity.activity instanceof Object) {
-          console.log(activity.activity.name);
-          console.log(activityName);
-          //This should return true, but i think because of types, it doesn't work. It thinks activity is "any"
-          activity.activity.name === activityName;
+        if (isActivityWithCustomName(activity.activity)) {
+          return activity.activity.name === activityName;
         }
       });
     }
