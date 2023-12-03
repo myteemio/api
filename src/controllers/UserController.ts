@@ -1,10 +1,6 @@
 import Elysia, { t } from 'elysia';
 import { isAuthenticated } from '../plugins/authPlugin';
-import { createNewUser, findUserByEmail } from '../services/userService';
-import jwt from '@elysiajs/jwt';
 import { mapUserToUserDTO } from '../services/mappers';
-import { ForbiddenDTO } from '../types/ForbiddenDTO';
-import { sendSignInEmail } from '../services/mailService';
 import { InternalServerErrorDTO } from '../types/InternalServerErrorDTO';
 import { NotFoundDTO } from '../types/NotFoundDTO';
 

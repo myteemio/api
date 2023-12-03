@@ -18,7 +18,14 @@ export async function findTeemioByUrl(url: string) {
   return await MyTeemio.findOne({ url: url });
 }
 
-export async function updateTeemioStatusById(id: string, newstatus: Static<typeof MyTeemioStatusEnum>) {
+export async function deleteTeemioById(id: string) {
+  return await MyTeemio.findByIdAndDelete(id);
+} 
+
+export async function updateTeemioStatusById(
+  id: string,
+  newstatus: Static<typeof MyTeemioStatusEnum>
+) {
   return await MyTeemio.findByIdAndUpdate(id, { status: newstatus });
 }
 
@@ -26,11 +33,27 @@ export async function createTeemio(teemio: Static<typeof MyTeemioDTO>) {
   return await new MyTeemio(teemio).save();
 }
 
-export async function updateTeemioById(id: string, teemio: Static<typeof updateTeemioDTO>) {
+export async function updateTeemioById(
+  id: string,
+  teemio: Static<typeof updateTeemioDTO>
+) {
   return await MyTeemio.findByIdAndUpdate(id, teemio, { new: true });
 }
 
-export async function finalizeTeemio(idorurl: string, teemio: Static<typeof finalizeTeemioDTO>) {
+export async function dateExistsInTeemio(id: string, date: string | string[]) {
+  const dates = typeof date === 'string' ? [date] : date;
+  const teemio = await findTeemioById(id);
+  const teemioDates = teemio?.dates.map((date) =>
+    dayjs(date.date).format('YYYY-MM-DD')
+  );
+
+  return dates.some((date) => teemioDates?.includes(date));
+}
+
+export async function finalizeTeemio(
+  idorurl: string,
+  teemio: Static<typeof finalizeTeemioDTO>
+) {
   return await MyTeemio.findByIdAndUpdate(
     idorurl,
     {
@@ -45,12 +68,16 @@ export async function finalizeTeemio(idorurl: string, teemio: Static<typeof fina
 }
 
 export function IsActivityTimeslotsValid(
-  activities: Static<typeof MyTeemioActivitiesWithVotes> | Static<typeof MyTeemioActivitiesWithoutVotes>
+  activities:
+    | Static<typeof MyTeemioActivitiesWithVotes>
+    | Static<typeof MyTeemioActivitiesWithoutVotes>
 ): boolean {
   let currentFrom: Dayjs | undefined;
   let currentTo: Dayjs | undefined;
   let activitiesSorted = activities.sort((a, b) =>
-    dayjs(new Date(a.timeslot.from)).isAfter(dayjs(new Date(b.timeslot.from))) ? 1 : -1
+    dayjs(new Date(a.timeslot.from)).isAfter(dayjs(new Date(b.timeslot.from)))
+      ? 1
+      : -1
   );
   for (const activity of activitiesSorted) {
     const from = dayjs(new Date(activity.timeslot.from));
