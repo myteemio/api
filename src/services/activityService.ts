@@ -1,4 +1,5 @@
 import { Activity, ActivityDocument } from '../models/Activity';
+import { MyTeemio } from '../models/MyTeemio';
 
 export async function getAllActivities() {
   return await Activity.find({});
@@ -7,6 +8,8 @@ export async function getAllActivities() {
 export async function findActivityById(id: string) {
   return await Activity.findById(id);
 }
+
+
 
 export async function activityExists(activityId: string | string[]) {
   return await Activity.exists({ _id: { $in: typeof activityId === 'string' ? [activityId] : activityId } });

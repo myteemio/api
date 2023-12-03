@@ -11,6 +11,7 @@ import {
   finalizeTeemio,
   findTeemioById,
   findTeemioByUrl,
+  updateTeemioActivityVotesById,
   updateTeemioById,
   updateTeemioDateVotesById,
   updateTeemioStatusById,
@@ -482,7 +483,6 @@ export const MyTeemioController = new Elysia({ name: 'routes:myteemio' }).group(
     app.post(
       '/vote/:id',
       async ({ body, set, params: { id } }) => {
-
         //Check om teemio eksisterer
         if (mongoose.isValidObjectId(id)) {
           const foundTeemio = await findTeemioById(id);
@@ -518,6 +518,18 @@ export const MyTeemioController = new Elysia({ name: 'routes:myteemio' }).group(
             }
           }
 
+          //Check if user exists
+          //If not create the user
+          const existingUser = await findUserByEmail(body.userinfo.email || '');
+
+          if (!existingUser) {
+            await createNewUser({
+              name: body.userinfo.name,
+              email: body.userinfo.email,
+              type: 'user',
+            });
+          }
+
           //Check if votes exists in teemio
           if (body.datesVotedOn.length > 0) {
             const datesToCheck = body.datesVotedOn.map((date) =>
@@ -533,14 +545,10 @@ export const MyTeemioController = new Elysia({ name: 'routes:myteemio' }).group(
             }
           }
 
-          //For each activity in activitiesVotedOn, add this users name to the vote array
-          //Find teemio
-          //Find the activity with the id they voted for and add their name to it
-
-          //For each date in datesVotedOn, add this users name to the vote array
           if (body.userinfo.email) {
             const currentUser = await findUserByEmail(body.userinfo.email);
             await updateTeemioDateVotesById(id, currentUser, body.datesVotedOn);
+            await updateTeemioActivityVotesById(id, currentUser, body.activitiesVotedOn);
             set.status = 200;
             return mapMyTeemioToMyTeemioDTO(foundTeemio);
           }

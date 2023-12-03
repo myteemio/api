@@ -2,6 +2,7 @@ import { Static } from 'elysia';
 import {
   MyTeemioActivitiesWithVotes,
   MyTeemioActivitiesWithoutVotes,
+  MyTeemioActivityWithoutVotesAndTime,
   MyTeemioDTO,
   MyTeemioStatusEnum,
   finalizeTeemioDTO,
@@ -48,6 +49,44 @@ export async function updateTeemioDateVotesById(
     }
   }
 
+  return await teemio?.save();
+}
+
+export async function updateTeemioActivityVotesById(
+  id: string,
+  user: UserDocument | null,
+  activitiesVotedFor: Static<typeof MyTeemioActivityWithoutVotesAndTime>[]
+) {
+  const teemio = await findTeemioById(id);
+
+  for (const activityVotedFor of activitiesVotedFor) {
+    let index;
+
+    //Activity is reference
+    if (typeof activityVotedFor.activity === 'string') {
+      index = teemio?.activities.findIndex(
+        (activity) => activity.activity === activityVotedFor.activity
+      );
+    } else {
+      //Activity is custom activity
+      const activityName = activityVotedFor.activity.name;
+      index = teemio?.activities.findIndex((activity) => {
+        if (activity.activity instanceof Object) {
+          console.log(activity.activity.name);
+          console.log(activityName);
+          //This should return true, but i think because of types, it doesn't work. It thinks activity is "any"
+          activity.activity.name === activityName;
+        }
+      });
+    }
+
+    if (index !== undefined && index !== -1 && user) {
+      teemio?.activities[index].votes.push({
+        id: user.id,
+        name: user.name,
+      });
+    }
+  }
   return await teemio?.save();
 }
 
