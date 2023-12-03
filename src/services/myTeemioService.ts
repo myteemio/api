@@ -9,6 +9,8 @@ import {
 } from '../controllers/MyTeemioController';
 import { MyTeemio } from '../models/MyTeemio';
 import dayjs, { Dayjs } from 'dayjs';
+import { UserDocument } from '../models/User';
+import { stringToDayjs } from '../util/date';
 
 export async function findTeemioById(id: string) {
   return await MyTeemio.findById(id);
@@ -20,13 +22,33 @@ export async function findTeemioByUrl(url: string) {
 
 export async function deleteTeemioById(id: string) {
   return await MyTeemio.findByIdAndDelete(id);
-} 
+}
 
 export async function updateTeemioStatusById(
   id: string,
   newstatus: Static<typeof MyTeemioStatusEnum>
 ) {
   return await MyTeemio.findByIdAndUpdate(id, { status: newstatus });
+}
+
+export async function updateTeemioDateVotesById(
+  id: string,
+  user: UserDocument | null,
+  dayVotedFor: string[]
+) {
+  const teemio = await findTeemioById(id);
+
+  for (const day of dayVotedFor) {
+    const index = teemio?.dates.findIndex(
+      (date) => dayjs(date.date).format('YYYY-MM-DD') === stringToDayjs(day)
+    );
+
+    if (index !== undefined && index !== -1 && user) {
+      teemio?.dates[index].votes.push({ id: user.id, name: user.name });
+    }
+  }
+
+  return await teemio?.save();
 }
 
 export async function createTeemio(teemio: Static<typeof MyTeemioDTO>) {

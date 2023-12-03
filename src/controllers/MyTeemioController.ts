@@ -12,6 +12,7 @@ import {
   findTeemioById,
   findTeemioByUrl,
   updateTeemioById,
+  updateTeemioDateVotesById,
   updateTeemioStatusById,
 } from '../services/myTeemioService';
 import {
@@ -62,12 +63,24 @@ const myTeemioCustomActivityOrReferenceWithoutVotesDTO = t.Omit(
   ['votes']
 );
 
+const myTeemioCustomActivityOrReferenceWithoutVotesAndTimeDTO = t.Omit(
+  myTeemioCustomActivityOrReferenceWithVotesDTO,
+  ['votes', 'timeslot']
+);
+
 export const MyTeemioActivitiesWithVotes = t.Array(
   myTeemioCustomActivityOrReferenceWithVotesDTO
 );
 export const MyTeemioActivitiesWithoutVotes = t.Array(
   myTeemioCustomActivityOrReferenceWithoutVotesDTO
 );
+
+export const MyTeemioActivitiesWithoutVotesAndTime = t.Array(
+  myTeemioCustomActivityOrReferenceWithoutVotesAndTimeDTO
+);
+
+export const MyTeemioActivityWithoutVotesAndTime =
+  myTeemioCustomActivityOrReferenceWithoutVotesAndTimeDTO;
 
 const MyTeemioDateWithVote = t.Object({
   date: t.String({ format: 'date' }),
@@ -134,11 +147,7 @@ export const finalizeTeemioDTO = t.Object({
 });
 
 const voteTeemioDTO = t.Object({
-  activitiesVotedOn: t.Array(
-    t.Object({
-      activity: myTeemioCustomActivityOrReferenceWithVotesDTO,
-    })
-  ),
+  activitiesVotedOn: t.Array(MyTeemioActivityWithoutVotesAndTime),
   datesVotedOn: t.Array(t.String({ format: 'date' })),
   userinfo: t.Object({
     name: t.String(),
@@ -473,7 +482,6 @@ export const MyTeemioController = new Elysia({ name: 'routes:myteemio' }).group(
     app.post(
       '/vote/:id',
       async ({ body, set, params: { id } }) => {
-        //De sender array af aktiviteter og array af dates
 
         //Check om teemio eksisterer
         if (mongoose.isValidObjectId(id)) {
@@ -489,16 +497,16 @@ export const MyTeemioController = new Elysia({ name: 'routes:myteemio' }).group(
 
           const activityRefIds = body.activitiesVotedOn.reduce(function (
             result: string[],
-            element
+            activity
           ) {
-            if (typeof element.activity === 'string') {
-              result.push(element.activity);
+            if (typeof activity.activity === 'string') {
+              result.push(activity.activity);
             }
             return result;
           },
           []);
 
-          //Check if activities voted on are legit
+          //Check if activities exists in teemio
           if (activityRefIds.length > 0) {
             const exists = await activityExists(activityRefIds);
             if (!exists) {
@@ -510,7 +518,7 @@ export const MyTeemioController = new Elysia({ name: 'routes:myteemio' }).group(
             }
           }
 
-          //Check om date votes er legit
+          //Check if votes exists in teemio
           if (body.datesVotedOn.length > 0) {
             const datesToCheck = body.datesVotedOn.map((date) =>
               stringToDayjs(date)
@@ -522,14 +530,20 @@ export const MyTeemioController = new Elysia({ name: 'routes:myteemio' }).group(
                 message: 'Date voted on does not exists in Teemio',
                 error_code: 'datedoesnotexist',
               };
-            } else {
-              console.log('Dates exists in teemio');
             }
           }
 
           //For each activity in activitiesVotedOn, add this users name to the vote array
+          //Find teemio
+          //Find the activity with the id they voted for and add their name to it
 
           //For each date in datesVotedOn, add this users name to the vote array
+          if (body.userinfo.email) {
+            const currentUser = await findUserByEmail(body.userinfo.email);
+            await updateTeemioDateVotesById(id, currentUser, body.datesVotedOn);
+            set.status = 200;
+            return mapMyTeemioToMyTeemioDTO(foundTeemio);
+          }
         }
         set.status = 500;
         return { message: 'Not implemented', error_code: 'notimplemented' };
@@ -562,7 +576,7 @@ export const MyTeemioController = new Elysia({ name: 'routes:myteemio' }).group(
                   error_code: 'forbidden',
                 };
               }
-  
+
               set.status = 200;
               await deleteTeemioById(id);
               return { message: 'Teemio was succesfully deleted' };
@@ -608,24 +622,29 @@ export const MyTeemioController = new Elysia({ name: 'routes:myteemio' }).group(
       '/:idorurl',
       async ({ params: { idorurl }, set }) => {
         try {
-          if(mongoose.isValidObjectId(idorurl)) {
-          
+          if (mongoose.isValidObjectId(idorurl)) {
             const teemio = await findTeemioById(idorurl);
-            if(teemio) {
+            if (teemio) {
               set.status = 200;
               return mapMyTeemioToMyTeemioDTO(teemio);
             }
             set.status = 404;
-            return { message: 'Teemio not found', error_code: 'teemionotfound' };
+            return {
+              message: 'Teemio not found',
+              error_code: 'teemionotfound',
+            };
           }
-  
-          const teemio = await findTeemioByUrl(idorurl)
-          if(teemio) {
+
+          const teemio = await findTeemioByUrl(idorurl);
+          if (teemio) {
             set.status = 200;
             return mapMyTeemioToMyTeemioDTO(teemio);
           } else {
             set.status = 404;
-            return { message: 'Teemio not found', error_code: 'teemionotfound' };
+            return {
+              message: 'Teemio not found',
+              error_code: 'teemionotfound',
+            };
           }
         } catch (error) {
           set.status = 500;
