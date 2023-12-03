@@ -1,4 +1,4 @@
-import { Elysia } from 'elysia';
+import { Elysia, NotFoundError } from 'elysia';
 import { swagger } from '@elysiajs/swagger';
 import { ActivityController } from './controllers/ActivityController';
 import { MyTeemioController } from './controllers/MyTeemioController';
@@ -23,7 +23,7 @@ if (!process.env.RESEND_API_KEY) {
 // Setup db
 import './db/setupMongoDB';
 import { UserController } from './controllers/UserController';
-import { BadRequestError, ForbiddenError } from './types/CustomErrors';
+import { BadRequestError, ForbiddenError, InternalServerError, UnauthorizedError } from './types/CustomErrors';
 
 // Setup the Web API
 const app = new Elysia({ prefix: '/api' });
@@ -85,7 +85,13 @@ app.use(
 );
 
 // App register custom errors
-app.error({ ForbiddenError: ForbiddenError, BadRequestError: BadRequestError });
+app.error({
+  ForbiddenError: ForbiddenError,
+  BadRequestError: BadRequestError,
+  NotFoundError: NotFoundError,
+  UnauthorizedError: UnauthorizedError,
+  InternalServerError: InternalServerError,
+});
 
 // Setup controllers
 app.use(ActivityController);
