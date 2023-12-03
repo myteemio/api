@@ -1,7 +1,7 @@
-
+import { HTTPStatusName } from 'elysia/dist/utils';
 
 const errorResponseMap = new Map<Number, [string, string]>([
-  [400, ['Bad Request', 'badreuest']],
+  [400, ['Bad Request', 'badrequest']],
   [401, ['Unauthorized', 'unauthorized']],
   [403, ['Forbidden', 'forbidden']],
   [404, ['Not Found', 'notfound']],
@@ -9,27 +9,31 @@ const errorResponseMap = new Map<Number, [string, string]>([
 ]);
 
 export function errorHandler(
+  status: number | HTTPStatusName | undefined,
   statusCode: number,
-  errorCode?: string,
-  message?: string
-): { message: string; errorCode: string } {
-  if (statusCode && errorCode && message) {
-    return {
-      message: message,
-      errorCode: errorResponseMap.get(statusCode)?.[1] || 'Error',
-    };
+  message?: string,
+  errorCode?: string
+) {
+  if (status) {
+    status = statusCode;
   }
 
+  if (statusCode && message && errorCode) {
+    return {
+      message: message,
+      error_code: errorCode,
+    };
+  }
 
   if (statusCode && message) {
     return {
       message: message,
-      errorCode: errorResponseMap.get(statusCode)?.[1] || 'Error',
+      error_code: errorResponseMap.get(statusCode)?.[1] || 'Error',
     };
   }
 
   return {
     message: errorResponseMap.get(statusCode)?.[0] || 'Error',
-    errorCode: errorResponseMap.get(statusCode)?.[1] || 'Error',
+    error_code: errorResponseMap.get(statusCode)?.[1] || 'Error',
   };
 }

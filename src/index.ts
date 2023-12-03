@@ -23,6 +23,7 @@ if (!process.env.RESEND_API_KEY) {
 // Setup db
 import './db/setupMongoDB';
 import { UserController } from './controllers/UserController';
+import { BadRequestError, ForbiddenError } from './types/CustomErrors';
 
 // Setup the Web API
 const app = new Elysia({ prefix: '/api' });
@@ -82,6 +83,9 @@ app.use(
     },
   })
 );
+
+// App register custom errors
+app.error({ ForbiddenError: ForbiddenError, BadRequestError: BadRequestError });
 
 // Setup controllers
 app.use(ActivityController);

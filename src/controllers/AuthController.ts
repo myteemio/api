@@ -7,6 +7,7 @@ import { ForbiddenDTO } from '../types/ForbiddenDTO';
 import { sendSignInEmail } from '../services/mailService';
 import { InternalServerErrorDTO } from '../types/InternalServerErrorDTO';
 import { NotFoundDTO } from '../types/NotFoundDTO';
+import { errorHandler } from '../util/response';
 
 export const getUserDTO = t.Object({
   id: t.String(),
@@ -37,6 +38,7 @@ export const AuthController = new Elysia({ name: 'routes:auth' }).group('/auth',
             email: body.email,
             phone: '+45 21775413',
           });
+
           set.status = 201;
           return { message: 'User created!', user: mapUserToUserDTO(newUser) };
         }
@@ -44,16 +46,13 @@ export const AuthController = new Elysia({ name: 'routes:auth' }).group('/auth',
         // Send the token to the mail for magic login
         const token = await jwt.sign({ id: existingUser.id });
 
-        try {
-          await sendSignInEmail(existingUser.toObject(), token);
-          return { message: `Check your email for magic link to login!` };
-        } catch (err: any) {
-          console.error(err);
-          set.status = 500;
-          return { message: 'Error sending email', error_code: 'internalservererror' };
-        }
+        await sendSignInEmail(existingUser.toObject(), token);
+        return { message: `Check your email for magic link to login!` };
       },
       {
+        error({ error, set }) {
+          return errorHandler(set.status, 500, `Error getting all activities: ${error}`);
+        },
         response: {
           200: t.Object({ message: t.String() }),
           201: t.Object({ message: t.String(), user: getUserDTO }),

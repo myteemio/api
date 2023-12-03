@@ -12,6 +12,8 @@ import {
 import { BadRequestDTO } from '../types/BadRequestDTO';
 import mongoose from 'mongoose';
 import { mapActivityToActivityDTO } from '../services/mappers';
+import { errorHandler } from '../util/response';
+import { NotFoundError } from '../types/CustomErrors';
 
 export const ActivityDTO = t.Object({
   id: t.String(),
@@ -45,11 +47,14 @@ export const ActivityController = new Elysia({ name: 'routes:activities' }).grou
   // /activites
   app.get(
     '/',
-    async () => {
+    async ({ set }) => {
       const allactivities = await getAllActivities();
       return { activities: allactivities.map((x) => mapActivityToActivityDTO(x)) };
     },
     {
+      error({ error, set }) {
+        return errorHandler(set.status, 500, error.message);
+      },
       response: {
         200: t.Object({ activities: t.Array(getActivityDTO) }),
         500: InternalServerErrorDTO,
@@ -74,20 +79,23 @@ export const ActivityController = new Elysia({ name: 'routes:activities' }).grou
           return mapActivityToActivityDTO(activityById);
         }
 
-        set.status = 404;
-        return { message: 'Not found', error_code: 'notfound' };
+        throw new NotFoundError('Activity was not found!');
       } else {
         const activityByUrl = await findActivityByUrl(idorurl);
 
         if (activityByUrl) {
           return mapActivityToActivityDTO(activityByUrl);
         }
-
-        set.status = 404;
-        return { message: 'Not found', error_code: 'notfound' };
+        throw new NotFoundError('Activity was not found!');
       }
     },
     {
+      error({ error, set }) {
+        if (error instanceof NotFoundError) {
+          return errorHandler(set.status, error.statusCode, `${error.message}`);
+        }
+        return errorHandler(set.status, 500, `Error getting activity: ${error.message}`);
+      },
       params: t.Object({
         idorurl: t.String(),
       }),
@@ -115,6 +123,9 @@ export const ActivityController = new Elysia({ name: 'routes:activities' }).grou
       return mapActivityToActivityDTO(newActivity);
     },
     {
+      error({ error, set }) {
+        return errorHandler(set.status, 500, `Error getting activity: ${error.message}`);
+      },
       body: postActivityDTO,
       response: {
         200: getActivityDTO,

@@ -3,6 +3,8 @@ import { isAuthenticated } from '../plugins/authPlugin';
 import { mapUserToUserDTO } from '../services/mappers';
 import { InternalServerErrorDTO } from '../types/InternalServerErrorDTO';
 import { NotFoundDTO } from '../types/NotFoundDTO';
+import { NotFoundError } from '../types/CustomErrors';
+import { errorHandler } from '../util/response';
 
 export const getUserDTO = t.Object({
   id: t.String(),
@@ -33,13 +35,18 @@ export const UserController = new Elysia({ name: 'routes:user' }).group('/user',
       '/account',
       ({ user, set }) => {
         if (!user) {
-          set.status = 404;
-          return { message: 'User not found!', error_code: 'nouseronaccount' };
+          throw new NotFoundError('User not found!');
         }
 
         return mapUserToUserDTO(user);
       },
       {
+        error({ error, set }) {
+          if (error instanceof NotFoundError) {
+            return errorHandler(set.status, error.statusCode, `Error getting activity: ${error.message}`);
+          }
+          return errorHandler(set.status, 500, `Error: ${error.message}`);
+        },
         response: {
           200: getUserDTO,
           404: NotFoundDTO,
