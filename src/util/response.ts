@@ -13,7 +13,7 @@ export function errorHandler(
   statusCode: number,
   message?: string,
   errorCode?: string
-) {
+): { message: string; error_code: string } {
   if (status) {
     status = statusCode;
   }
