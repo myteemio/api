@@ -4,12 +4,14 @@ import { Activity } from '../models/Activity';
 import { seedDatabase, setupInMemoryDatabase } from './routes.helper';
 import { MyTeemio } from '../models/MyTeemio';
 
+const baseURI = `http://localhost:${process.env.PORT ?? 3001}`;
+
 describe('Routes', async () => {
   await setupInMemoryDatabase();
   await seedDatabase();
 
   test('(GET)/api/activities', async () => {
-    const req = new Request('http://localhost:3001/api/activities');
+    const req = new Request(`${baseURI}/api/activities`);
     const res = await app.handle(req);
     const body = (await res.json()) as { activities: Activity[] };
 
@@ -20,7 +22,7 @@ describe('Routes', async () => {
   });
 
   test('(GET)/api/activities/:idorurl', async () => {
-    const req = new Request('http://localhost:3001/api/activities/gourmet-cooking-class');
+    const req = new Request(`${baseURI}/api/activities/gourmet-cooking-class`);
     const res = await app.handle(req);
     const body = (await res.json()) as Activity;
 
@@ -31,7 +33,7 @@ describe('Routes', async () => {
   });
 
   test('(GET)/api/myteemio/:idorurl', async () => {
-    const req = new Request('http://localhost:3001/api/myteemio/cultural-day', {
+    const req = new Request(`${baseURI}/api/myteemio/cultural-day`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
