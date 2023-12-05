@@ -10,7 +10,7 @@ describe('Routes', async () => {
 
   test('(GET)/api/activities', async () => {
     const req = new Request('http://localhost:3001/api/activities');
-    const res = await app.fetch(req);
+    const res = await app.handle(req);
     const body = (await res.json()) as { activities: Activity[] };
 
     expect(res.status).toBe(200);
@@ -20,10 +20,8 @@ describe('Routes', async () => {
   });
 
   test('(GET)/api/activities/:idorurl', async () => {
-    const req = new Request(
-      'http://localhost:3001/api/activities/gourmet-cooking-class'
-    );
-    const res = await app.fetch(req);
+    const req = new Request('http://localhost:3001/api/activities/gourmet-cooking-class');
+    const res = await app.handle(req);
     const body = (await res.json()) as Activity;
 
     expect(res.status).toBe(200);
@@ -39,7 +37,7 @@ describe('Routes', async () => {
         'Content-Type': 'application/json',
       },
     });
-    const res = await app.fetch(req);
+    const res = await app.handle(req);
     const body = (await res.json()) as MyTeemio;
 
     expect(res.status).toBe(200);
@@ -47,5 +45,4 @@ describe('Routes', async () => {
     expect(body.status).toBe('locked');
     expect(body.dates[0].votes[0]).toEqual({ id: 'user3' });
   });
-
 });
