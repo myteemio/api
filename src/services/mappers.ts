@@ -5,10 +5,12 @@ import { getUserDTO } from '../controllers/AuthController';
 import { MyTeemioDocument } from '../models/MyTeemio';
 import { MyTeemioDTO } from '../controllers/MyTeemioController';
 import { ActivityDTO } from '../controllers/ActivityController';
-import { findUserById } from './userService';
+import { makeUrlSafe } from '../util/helperFunctions';
 
 // Function to map Activity to ActivityDTO
-export function mapActivityToActivityDTO(activity: ActivityDocument): Static<typeof ActivityDTO> {
+export function mapActivityToActivityDTO(
+  activity: ActivityDocument
+): Static<typeof ActivityDTO> {
   return {
     id: activity.id.toString(),
     url: activity.url,
@@ -34,7 +36,9 @@ export function mapActivityToActivityDTO(activity: ActivityDocument): Static<typ
   };
 }
 
-export function mapUserToUserDTO(user: UserDocument): Static<typeof getUserDTO> {
+export function mapUserToUserDTO(
+  user: UserDocument
+): Static<typeof getUserDTO> {
   return {
     id: user.id,
     name: user.name,
@@ -44,7 +48,9 @@ export function mapUserToUserDTO(user: UserDocument): Static<typeof getUserDTO> 
   };
 }
 
-export function mapMyTeemioToMyTeemioDTO(teemio: MyTeemioDocument): Static<typeof MyTeemioDTO> {
+export function mapMyTeemioToMyTeemioDTO(
+  teemio: MyTeemioDocument
+): Static<typeof MyTeemioDTO> {
   return {
     id: teemio.id,
     final: null,
@@ -57,15 +63,29 @@ export function mapMyTeemioToMyTeemioDTO(teemio: MyTeemioDocument): Static<typeo
           from: v.timeslot.from.toString(),
           to: v.timeslot.to.toString(),
         },
-        votes: v.votes,
+        votes: v.votes.map((v) => {
+          return {
+            id: v.id.toString(),
+            name: v.name,
+          };
+        }),
       };
     }),
     dates: teemio.dates.map((v) => {
       return {
         date: v.date.toString(),
-        votes: v.votes,
+        votes: v.votes.map((v) => {
+          return {
+            id: v.toString(),
+          };
+        }),
       };
     }),
-    eventinfo: teemio.eventinfo,
+    eventinfo: {
+      description: teemio.eventinfo.description,
+      logo: teemio.eventinfo.logo,
+      name: teemio.eventinfo.name,
+      url: makeUrlSafe(teemio.eventinfo.name),
+    },
   };
 }

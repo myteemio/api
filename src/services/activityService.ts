@@ -1,5 +1,4 @@
-import { Activity, ActivityDocument } from '../models/Activity';
-import { MyTeemio } from '../models/MyTeemio';
+import { Activity,  } from '../models/Activity';
 
 export async function getAllActivities() {
   return await Activity.find({});
@@ -23,11 +22,4 @@ export async function createNewActivity(activity: Activity) {
   return await new Activity(activity).save();
 }
 
-export function makeUrlSafe(name: string) {
-  // Replace spaces with hyphens
-  var urlSafeName = name.replace(/\s+/g, '-');
-  // Remove non-alphanumeric characters (except hyphens)
-  urlSafeName = urlSafeName.replace(/[^a-zA-Z0-9\-]/g, '');
-  // Convert to lowercase
-  return urlSafeName.toLowerCase();
-}
+

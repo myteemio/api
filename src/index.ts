@@ -4,7 +4,6 @@ import { ActivityController } from './controllers/ActivityController';
 import { MyTeemioController } from './controllers/MyTeemioController';
 import cors from '@elysiajs/cors';
 import { helmet } from 'elysia-helmet';
-import jwt from '@elysiajs/jwt';
 import { AuthController } from './controllers/AuthController';
 
 // Check for ENV variables
@@ -26,7 +25,7 @@ import { UserController } from './controllers/UserController';
 import { BadRequestError, ForbiddenError, InternalServerError, UnauthorizedError } from './types/CustomErrors';
 
 // Setup the Web API
-const app = new Elysia({ prefix: '/api' });
+export const app = new Elysia({ prefix: '/api' });
 
 // Setup Helmet security
 app.use(

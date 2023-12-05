@@ -7,13 +7,13 @@ import {
   findActivityById,
   findActivityByUrl,
   getAllActivities,
-  makeUrlSafe,
 } from '../services/activityService';
 import { BadRequestDTO } from '../types/BadRequestDTO';
 import mongoose from 'mongoose';
 import { mapActivityToActivityDTO } from '../services/mappers';
 import { errorHandler } from '../util/response';
 import { NotFoundError } from '../types/CustomErrors';
+import { makeUrlSafe } from '../util/helperFunctions';
 
 export const ActivityDTO = t.Object({
   id: t.String(),
@@ -43,13 +43,17 @@ const getActivityDTO = ActivityDTO;
 
 const postActivityDTO = t.Omit(ActivityDTO, ['id']);
 
-export const ActivityController = new Elysia({ name: 'routes:activities' }).group('/activities', (app) => {
+export const ActivityController = new Elysia({
+  name: 'routes:activities',
+}).group('/activities', (app) => {
   // /activites
   app.get(
     '/',
     async ({ set }) => {
       const allactivities = await getAllActivities();
-      return { activities: allactivities.map((x) => mapActivityToActivityDTO(x)) };
+      return {
+        activities: allactivities.map((x) => mapActivityToActivityDTO(x)),
+      };
     },
     {
       error({ error, set }) {
@@ -94,7 +98,11 @@ export const ActivityController = new Elysia({ name: 'routes:activities' }).grou
         if (error instanceof NotFoundError) {
           return errorHandler(set.status, error.statusCode, `${error.message}`);
         }
-        return errorHandler(set.status, 500, `Error getting activity: ${error.message}`);
+        return errorHandler(
+          set.status,
+          500,
+          `Error getting activity: ${error.message}`
+        );
       },
       params: t.Object({
         idorurl: t.String(),
@@ -124,7 +132,11 @@ export const ActivityController = new Elysia({ name: 'routes:activities' }).grou
     },
     {
       error({ error, set }) {
-        return errorHandler(set.status, 500, `Error getting activity: ${error.message}`);
+        return errorHandler(
+          set.status,
+          500,
+          `Error getting activity: ${error.message}`
+        );
       },
       body: postActivityDTO,
       response: {
