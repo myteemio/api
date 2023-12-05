@@ -3,12 +3,20 @@ import { User } from '../models/User';
 import { Activity } from '../models/Activity';
 import { mockActivities, mockTeemios, mockUsers } from '../util/testData';
 import { MyTeemio } from '../models/MyTeemio';
+import MongoMemoryServer from 'mongodb-memory-server-core';
 
-const uri = process.env.DB_CONNECTION_STRING; // Your MongoDB connection string
+let mongodbConn: MongoMemoryServer; // Your MongoDB connection string
+
+export async function setupInMemoryDatabase() {
+  console.log('Setting up!');
+  const mongod = await MongoMemoryServer.create();
+  mongodbConn = mongod;
+  await mongoose.connect(mongodbConn.getUri()); // Connect to the DB
+}
 
 export async function seedDatabase() {
   console.log('Seeding database........');
-  if (uri) {
+  if (mongodbConn) {
     try {
       await insertMockUsers();
       await insertMockActivities();
@@ -19,21 +27,8 @@ export async function seedDatabase() {
   }
 }
 
-export async function dropDatabase() {
-  if (uri) {
-    try {
-      const db = await mongoose.connect(uri);
-      await db.connection.db.dropCollection('users');
-      await db.connection.db.dropCollection('activities');
-      await db.connection.db.dropCollection('myteemios');
-    } catch (error) {
-      console.log("Couldn't drop database", error);
-    }
-  }
-}
-
 export async function insertMockActivities() {
-  if (uri) {
+  if (mongodbConn) {
     try {
       return await Activity.insertMany(mockActivities);
     } catch (error) {
@@ -43,7 +38,7 @@ export async function insertMockActivities() {
 }
 
 export async function insertMockUsers() {
-  if (uri) {
+  if (mongodbConn) {
     try {
       return await User.insertMany(mockUsers);
     } catch (error) {
@@ -53,7 +48,7 @@ export async function insertMockUsers() {
 }
 
 export async function insertMockTeemios() {
-  if (uri) {
+  if (mongodbConn) {
     try {
       return await MyTeemio.insertMany(mockTeemios);
     } catch (error) {

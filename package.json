@@ -13,6 +13,7 @@
     "dayjs": "^1.11.10",
     "elysia": "latest",
     "elysia-helmet": "^1.0.1",
+    "mongodb-memory-server-core": "^9.1.1",
     "mongoose": "^8.0.1",
     "resend": "^2.0.0"
   },

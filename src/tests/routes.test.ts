@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'bun:test';
 import { app } from '..';
 import { Activity } from '../models/Activity';
-import { dropDatabase, seedDatabase } from './routes.helper';
+import { seedDatabase, setupInMemoryDatabase } from './routes.helper';
 import { MyTeemio } from '../models/MyTeemio';
 
 describe('Routes', async () => {
-  await dropDatabase();
+  await setupInMemoryDatabase();
   await seedDatabase();
 
   test('(GET)/api/activities', async () => {
