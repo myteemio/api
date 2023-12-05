@@ -40,7 +40,6 @@ describe('Routes', async () => {
       },
     });
     const res = await app.fetch(req);
-    console.log(res);
     const body = (await res.json()) as MyTeemio;
 
     expect(res.status).toBe(200);
