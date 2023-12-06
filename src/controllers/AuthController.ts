@@ -1,12 +1,10 @@
 import Elysia, { t } from 'elysia';
-import { isAuthenticated } from '../plugins/authPlugin';
 import { createNewUser, findUserByEmail } from '../services/userService';
 import jwt from '@elysiajs/jwt';
 import { mapUserToUserDTO } from '../services/mappers';
 import { ForbiddenDTO } from '../types/ForbiddenDTO';
 import { sendSignInEmail } from '../services/mailService';
 import { InternalServerErrorDTO } from '../types/InternalServerErrorDTO';
-import { NotFoundDTO } from '../types/NotFoundDTO';
 import { errorHandler } from '../util/response';
 
 export const getUserDTO = t.Object({
@@ -62,6 +60,45 @@ export const AuthController = new Elysia({ name: 'routes:auth' }).group('/auth',
         body: t.Object({ email: t.String() }),
         detail: {
           summary: 'Sign in using email',
+          tags: ['Auth'],
+        },
+      }
+    )
+    .post(
+      '/signin/token',
+      async ({ body, jwt, set }) => {
+        const existingUser = await findUserByEmail(body.email);
+
+        if (!existingUser) {
+          const newUser = await createNewUser({
+            name: 'Mikkel Bech',
+            type: 'user',
+            email: body.email,
+            phone: '+45 21775413',
+          });
+
+          set.status = 201;
+          return { message: 'User created!', user: mapUserToUserDTO(newUser) };
+        }
+
+        // Send the token to the mail for magic login
+        const token = await jwt.sign({ id: existingUser.id });
+
+        return { token: token };
+      },
+      {
+        error({ error, set }) {
+          return errorHandler(set.status, 500, `Error getting all activities: ${error}`);
+        },
+        response: {
+          200: t.Object({ token: t.Any() }),
+          201: t.Object({ message: t.String(), user: getUserDTO }),
+          403: ForbiddenDTO,
+          500: InternalServerErrorDTO,
+        },
+        body: t.Object({ email: t.String() }),
+        detail: {
+          summary: 'Get token as response for testing',
           tags: ['Auth'],
         },
       }

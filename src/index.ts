@@ -21,7 +21,7 @@ if (!process.env.RESEND_API_KEY) {
 
 // Setup db
 import './db/setupMongoDB';
-import { UserController } from './controllers/UserController';
+import { UserController, UserControllerExtra } from './controllers/UserController';
 import { BadRequestError, ForbiddenError, InternalServerError, UnauthorizedError } from './types/CustomErrors';
 
 // Setup the Web API
@@ -97,6 +97,7 @@ app.use(ActivityController);
 app.use(MyTeemioController);
 app.use(AuthController);
 app.use(UserController);
+app.use(UserControllerExtra);
 
 // Start the server
 app.listen(process.env.PORT ?? 3001);

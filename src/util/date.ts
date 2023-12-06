@@ -1,4 +1,4 @@
-import dayjs, { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 
 //Format to YYYY-MM-DD
 export function stringToDayjs(date: string) {

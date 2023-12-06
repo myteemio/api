@@ -1,7 +1,7 @@
 export const mockUsers = [
   {
     name: 'Alice Smith',
-    email: 'hieu-dk@hotmail.com',
+    email: 'test@test.com',
     phone: '+12345678',
     type: 'admin',
   },
@@ -51,8 +51,7 @@ export const mockActivities = [
   {
     name: 'Mountain Hiking Adventure',
     url: 'mountain-hiking-adventure',
-    description:
-      'Challenge yourself with a hike through scenic mountain trails.',
+    description: 'Challenge yourself with a hike through scenic mountain trails.',
     image: 'mountain_hiking.jpg',
     price: 60,
     persons: 8,
@@ -94,8 +93,7 @@ export const mockActivities = [
   {
     name: 'Urban Graffiti Art Tour',
     url: 'urban-graffiti-art-tour',
-    description:
-      "Discover the city's vibrant street art scene on this guided tour.",
+    description: "Discover the city's vibrant street art scene on this guided tour.",
     image: 'graffiti_tour.jpg',
     price: 20,
     persons: 15,
@@ -116,8 +114,7 @@ export const mockActivities = [
   {
     name: 'Underwater Diving Expedition',
     url: 'underwater-diving-expedition',
-    description:
-      'Explore the underwater world with a certified diving instructor.',
+    description: 'Explore the underwater world with a certified diving instructor.',
     image: 'diving_expedition.jpg',
     price: 120,
     persons: 4,
@@ -155,7 +152,7 @@ export const mockTeemios = [
       name: 'Annual Company Retreat',
       description: 'A fun retreat for all employees',
       logo: 'company_logo.png',
-      url: 'annual-company-retreat'
+      url: 'annual-company-retreat',
     },
     dates: [
       {
@@ -181,7 +178,7 @@ export const mockTeemios = [
       name: 'Cultural Day',
       description: 'Exploring local art and culture',
       logo: 'culture_day.png',
-      url: 'cultural-day'
+      url: 'cultural-day',
     },
     dates: [
       {
@@ -207,7 +204,7 @@ export const mockTeemios = [
       name: 'Outdoor Adventures',
       description: 'Hiking and exploring nature',
       logo: 'outdoor_adventures.png',
-      url: 'outdoor-adventures'
+      url: 'outdoor-adventures',
     },
     dates: [
       {
@@ -247,26 +244,22 @@ export const mockTeemios = [
       name: 'Wellness Weekend',
       description: 'Relaxing activities for health and wellness',
       logo: 'wellness_weekend.png',
-      url: 'wellness-weekend'
+      url: 'wellness-weekend',
     },
     dates: [
       {
         date: '2023-12-15',
         votes: ['user8', 'user9'],
       },
+      {
+        date: '2023-10-15',
+        votes: ['user2', 'user1'],
+      },
     ],
   },
   {
     status: 'finalized',
     activities: [
-      {
-        activity: '5b36fbde656f53446b9f52c0',
-        timeslot: {
-          from: '2023-12-18T12:30:00.000Z',
-          to: '2023-12-18T14:30:00.000Z',
-        },
-        votes: [{ id: 'user10', name: 'Ethan' }],
-      },
       {
         activity: {
           name: 'My cool custom activity2',
@@ -291,12 +284,16 @@ export const mockTeemios = [
       name: 'Culinary Exploration',
       description: 'Cooking class for food enthusiasts',
       logo: 'culinary_exploration.png',
-      url: 'culinary-exploration'
+      url: 'culinary-exploration',
     },
     dates: [
       {
         date: '2023-12-18',
         votes: ['user11', 'user12'],
+      },
+      {
+        date: '2023-12-06',
+        votes: ['user4', 'user2'],
       },
     ],
     final: {
@@ -320,3 +317,162 @@ export const mockTeemios = [
     },
   },
 ];
+
+export const mockSingleTeemioBody = {
+  activities: [
+    {
+      activity: {
+        name: 'A cool activity',
+        description: 'padel is fun',
+        image: 'A cool activity.jpg',
+        address: {
+          address1: 'awesome road',
+          zipcode: '1231313',
+          city: 'Cool City',
+          country: 'Cool Country',
+        },
+      },
+      timeslot: {
+        from: '2023-12-18T12:30:00.000Z',
+        to: '2023-12-18T14:30:00.000Z',
+      },
+      votes: [{ id: 'user10', name: 'Ethan' }],
+    },
+  ],
+  organizer: {
+    name: 'a cool person',
+    email: 'hej@hej.com',
+    phone: 'string',
+  },
+  eventinfo: {
+    name: 'Padel is fun',
+    description: 'join for somepadel',
+    logo: 'padel.png',
+    url: 'padel-is-fun',
+  },
+  dates: [
+    {
+      date: '2023-12-06',
+    },
+  ],
+};
+
+export const mockSingleActivityBody = {
+  name: 'Padel Viborg',
+  url: 'padel-viborg',
+  description: 'play some more padel',
+  image: 'padel.png',
+  price: 299,
+  persons: 4,
+  category: ['sport'],
+  address: {
+    address1: 'RC',
+    address2: '3,2',
+    zipcode: '1606',
+    city: 'Copenhagen',
+    country: 'Denmark',
+  },
+  referralLink: 'https://www.padel.dk/centre/klover',
+  location: {
+    lat: 141414,
+    long: 3892138,
+  },
+  estimatedHours: 2,
+};
+
+export const mockUpdateTeemioBody = {
+  activities: [
+    {
+      activity: {
+        name: 'Updated activity1',
+        description: 'this is a new activity',
+        image: 'newActivity.jpg',
+        address: {
+          address1: 'new address',
+          zipcode: '1231313',
+          city: 'A New City',
+          country: 'A New Country',
+        },
+      },
+      timeslot: {
+        from: '2023-12-18T19:30:00.000Z',
+        to: '2023-12-18T23:30:00.000Z',
+      },
+    },
+    {
+      activity: {
+        name: 'another activity',
+        description: 'its fun',
+        image: 'wafknwaifn.jpg',
+        address: {
+          address1: 'cool address',
+          zipcode: '88894',
+          city: 'Random City',
+          country: 'Random Country',
+        },
+      },
+      timeslot: {
+        from: '2023-12-18T10:30:00.000Z',
+        to: '2023-12-18T14:30:00.000Z',
+      },
+    },
+  ],
+  eventinfo: {
+    name: 'New cool event',
+    description: 'you should come to this event its cool',
+    logo: 'coollogo.png',
+    url: 'new-cool-event',
+  },
+  dates: [
+    {
+      date: '2023-05-06',
+    },
+  ],
+};
+
+export const mockTeemioVoteBody = {
+  activitiesVotedOn: [
+    {
+      activity: 'string',
+    },
+  ],
+  datesVotedOn: ['2023-12-06'],
+  userinfo: {
+    name: 'string',
+    email: 'string',
+  },
+};
+
+export const mockTeemioFinalizeBody = {
+  activities: [
+    {
+      activity: {
+        name: 'My cool custom activity2',
+        description: 'This is a custom activity2',
+        image: 'custom_activit2y.jpg',
+        address: {
+          address1: '123412313Custom Road',
+          zipcode: '12345123',
+          city: 'Custom City2',
+          country: 'Cool Country',
+        },
+        timeslot: {
+          from: '2023-12-18T12:30:00.000Z',
+          to: '2023-12-18T14:30:00.000Z',
+        },
+      },
+      votes: [{ id: 'user10', name: 'Ethan' }],
+    },
+  ],
+  date: '2023-12-18',
+  sendInvites: true,
+};
+
+export const mockUserBody = 
+  {
+    name: "weaofwaoef",
+    email: "kwaenmfwaf@test.com",
+    phone: "3123139813",
+    type: "user"
+  }
+

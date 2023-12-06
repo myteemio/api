@@ -2,7 +2,6 @@ import { Elysia, Static, t } from 'elysia';
 import { BadRequestDTO } from '../types/BadRequestDTO';
 import { InternalServerErrorDTO } from '../types/InternalServerErrorDTO';
 import { NotFoundDTO } from '../types/NotFoundDTO';
-import dayjs, { Dayjs } from 'dayjs';
 import {
   IsActivityTimeslotsValid,
   createTeemio,
@@ -28,7 +27,7 @@ import { UserDocument } from '../models/User';
 import { BadRequestError, ForbiddenError, InternalServerError, NotFoundError } from '../types/CustomErrors';
 import { errorHandler } from '../util/response';
 
-const myTeemioCustomActivityDTO = t.Object({
+export const myTeemioCustomActivityDTO = t.Object({
   name: t.String(),
   description: t.String(),
   image: t.String(),
@@ -57,6 +56,10 @@ const myTeemioCustomActivityOrReferenceWithVotesDTO = t.Object({
 
 const myTeemioCustomActivityOrReferenceWithoutVotesDTO = t.Omit(myTeemioCustomActivityOrReferenceWithVotesDTO, [
   'votes',
+]);
+
+const myTeemioCustomActivityOrReferenceWithoutTimeDTO = t.Omit(myTeemioCustomActivityOrReferenceWithVotesDTO, [
+  'timeslot',
 ]);
 
 const myTeemioCustomActivityOrReferenceWithoutVotesAndTimeDTO = t.Omit(myTeemioCustomActivityOrReferenceWithVotesDTO, [
@@ -122,11 +125,7 @@ export const updateTeemioDTO = t.Object({
 });
 
 export const finalizeTeemioDTO = t.Object({
-  activities: t.Array(
-    t.Object({
-      activity: myTeemioCustomActivityOrReferenceWithVotesDTO,
-    })
-  ),
+  activities: t.Array(myTeemioCustomActivityOrReferenceWithoutTimeDTO),
   date: t.String({ format: 'date' }),
   sendInvites: t.Boolean(),
 });
@@ -217,6 +216,105 @@ export const MyTeemioController = new Elysia({ name: 'routes:myteemio' }).group(
       },
       detail: {
         summary: 'Create a new Teemio event',
+        tags: ['My Teemio'],
+      },
+    }
+  );
+
+  app.post(
+    '/vote/:id',
+    async ({ body, set, params: { id } }) => {
+      //Check om teemio eksisterer
+      if (mongoose.isValidObjectId(id)) {
+        const foundTeemio = await findTeemioById(id);
+
+        if (!foundTeemio) {
+          throw new NotFoundError('Teemio not found!');
+        }
+
+        const activityRefIds = body.activitiesVotedOn.reduce(function (result: string[], activity) {
+          if (typeof activity.activity === 'string') {
+            result.push(activity.activity);
+          }
+          return result;
+        }, []);
+
+        //Check if activities exists in teemio
+        if (activityRefIds.length > 0) {
+          const exists = await activityExists(activityRefIds);
+          if (!exists) {
+            throw new BadRequestError('Activity voted on does not exist');
+          }
+        }
+
+        let votingUser: UserDocument | null = null;
+
+        // No email on user, create a new user every time
+        if (!body.userinfo.email) {
+          const newUser = await createNewUser({
+            name: body.userinfo.name,
+            type: 'user',
+          });
+
+          votingUser = newUser;
+        }
+
+        if (body.userinfo.email) {
+          const existingUser = await findUserByEmail(body.userinfo.email);
+          votingUser = existingUser;
+
+          if (!existingUser) {
+            const createdUser = await createNewUser({
+              name: body.userinfo.name,
+              email: body.userinfo.email,
+              type: 'user',
+            });
+            votingUser = createdUser;
+          }
+        }
+
+        if (!votingUser) {
+          throw new InternalServerError('The user voting couldnt be created');
+        }
+
+        //Check if votes exists in teemio
+        if (body.datesVotedOn.length > 0) {
+          const datesToCheck = body.datesVotedOn.map((date) => stringToDayjs(date));
+          const exists = await dateExistsInTeemio(mapMyTeemioToMyTeemioDTO(foundTeemio), datesToCheck);
+          if (!exists) {
+            throw new BadRequestError('Date voted on does not exists in Teemio');
+          }
+        }
+
+        await updateTeemioDateVotesById(foundTeemio, votingUser, body.datesVotedOn);
+        await updateTeemioActivityVotesById(foundTeemio, votingUser, body.activitiesVotedOn);
+        console.log('test');
+
+        return mapMyTeemioToMyTeemioDTO(foundTeemio);
+      }
+      throw new BadRequestError('Teemio ID required');
+    },
+    {
+      error({ error, set }) {
+        if (error instanceof NotFoundError) {
+          return errorHandler(set.status, error.statusCode, `${error.message}`);
+        }
+        if (error instanceof BadRequestError) {
+          return errorHandler(set.status, error.statusCode, `${error.message}`);
+        }
+        if (error instanceof InternalServerError) {
+          return errorHandler(set.status, error.statusCode, `${error.message}`);
+        }
+        return errorHandler(set.status, 500, `Error: ${error.message}`);
+      },
+      body: voteTeemioDTO,
+      response: {
+        200: MyTeemioDTO,
+        404: NotFoundDTO,
+        500: InternalServerErrorDTO,
+      },
+      detail: {
+        summary: 'Let users vote on their favorite activities or dates',
         tags: ['My Teemio'],
       },
     }
@@ -380,103 +478,6 @@ export const MyTeemioController = new Elysia({ name: 'routes:myteemio' }).group(
     }
   );
 
-  app.post(
-    '/vote/:id',
-    async ({ body, set, params: { id } }) => {
-      //Check om teemio eksisterer
-      if (mongoose.isValidObjectId(id)) {
-        const foundTeemio = await findTeemioById(id);
-
-        if (!foundTeemio) {
-          throw new NotFoundError('Teemio not found!');
-        }
-
-        const activityRefIds = body.activitiesVotedOn.reduce(function (result: string[], activity) {
-          if (typeof activity.activity === 'string') {
-            result.push(activity.activity);
-          }
-          return result;
-        }, []);
-
-        //Check if activities exists in teemio
-        if (activityRefIds.length > 0) {
-          const exists = await activityExists(activityRefIds);
-          if (!exists) {
-            throw new BadRequestError('Activity voted on does not exist');
-          }
-        }
-
-        let votingUser: UserDocument | null = null;
-
-        // No email on user, create a new user every time
-        if (!body.userinfo.email) {
-          const newUser = await createNewUser({
-            name: body.userinfo.name,
-            type: 'user',
-          });
-
-          votingUser = newUser;
-        }
-
-        if (body.userinfo.email) {
-          const existingUser = await findUserByEmail(body.userinfo.email);
-
-          if (!existingUser) {
-            const createdUser = await createNewUser({
-              name: body.userinfo.name,
-              email: body.userinfo.email,
-              type: 'user',
-            });
-            votingUser = createdUser;
-          }
-        }
-
-        if (!votingUser) {
-          throw new InternalServerError('The user voting couldnt be created');
-        }
-
-        //Check if votes exists in teemio
-        if (body.datesVotedOn.length > 0) {
-          const datesToCheck = body.datesVotedOn.map((date) => stringToDayjs(date));
-          const exists = await dateExistsInTeemio(mapMyTeemioToMyTeemioDTO(foundTeemio), datesToCheck);
-          if (!exists) {
-            throw new BadRequestError('Date voted on does not exists in Teemio');
-          }
-        }
-
-        await updateTeemioDateVotesById(foundTeemio, votingUser, body.datesVotedOn);
-        await updateTeemioActivityVotesById(foundTeemio, votingUser, body.activitiesVotedOn);
-
-        return mapMyTeemioToMyTeemioDTO(foundTeemio);
-      }
-      throw new BadRequestError('Teemio ID required');
-    },
-    {
-      error({ error, set }) {
-        if (error instanceof NotFoundError) {
-          return errorHandler(set.status, error.statusCode, `${error.message}`);
-        }
-        if (error instanceof BadRequestError) {
-          return errorHandler(set.status, error.statusCode, `${error.message}`);
-        }
-        if (error instanceof InternalServerError) {
-          return errorHandler(set.status, error.statusCode, `${error.message}`);
-        }
-        return errorHandler(set.status, 500, `Error: ${error.message}`);
-      },
-      body: voteTeemioDTO,
-      response: {
-        200: MyTeemioDTO,
-        404: NotFoundDTO,
-        500: InternalServerErrorDTO,
-      },
-      detail: {
-        summary: 'Let users vote on their favorite activities or dates',
-        tags: ['My Teemio'],
-      },
-    }
-  );
-
   app.use(isAuthenticated({ type: 'All' })).post(
     '/finalize/:id',
     async ({ body, set, params: { id }, user }) => {
@@ -490,6 +491,8 @@ export const MyTeemioController = new Elysia({ name: 'routes:myteemio' }).group(
         if (!isOwnerOfTeemioOrAdmin(foundTeemio.organizer, user!)) {
           throw new ForbiddenError('You have no access to this Teemio');
         }
+
+        //TODO: Should have some more validation weather or not the finalized activities exists in the teemio
 
         const finalize = await finalizeTeemio(id, body);
         if (finalize) {
