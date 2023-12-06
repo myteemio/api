@@ -5,6 +5,8 @@ import { MyTeemioController } from './controllers/MyTeemioController';
 import cors from '@elysiajs/cors';
 import { helmet } from 'elysia-helmet';
 import { AuthController } from './controllers/AuthController';
+import { UserController } from './controllers/UserController';
+import { BadRequestError, ForbiddenError, InternalServerError, UnauthorizedError } from './types/CustomErrors';
 
 // Check for ENV variables
 if (!process.env.JWT_SECRET) {
@@ -21,8 +23,8 @@ if (!process.env.RESEND_API_KEY) {
 
 // Setup db
 import './db/setupMongoDB';
-import { UserController, UserControllerExtra } from './controllers/UserController';
-import { BadRequestError, ForbiddenError, InternalServerError, UnauthorizedError } from './types/CustomErrors';
+import { AdminController } from './controllers/AdminController';
+import { ElysiaSwaggerConfig } from '@elysiajs/swagger/dist/types';
 
 // Setup the Web API
 export const app = new Elysia({ prefix: '/api' });
@@ -38,50 +40,60 @@ app.use(
 app.use(cors({ preflight: true, methods: '*', origin: true }));
 
 // Setup Swagger
-app.use(
-  swagger({
-    exclude: ['/api/'], // Exclude base path from Swagger. Such that PREFLIGHT requests doesnt show.
-    documentation: {
-      info: {
-        title: 'Teemio API documentation',
-        version: '1.0.0',
-        description: 'This page documents the entire API behind teemio.',
+const swaggerSettings: ElysiaSwaggerConfig = {
+  exclude: ['/api/'], // Exclude base path from Swagger. Such that PREFLIGHT requests doesnt show.
+  documentation: {
+    info: {
+      title: 'Teemio API documentation',
+      version: '1.0.0',
+      description: 'This page documents the entire API behind teemio.',
+    },
+    tags: [
+      {
+        name: 'Activities',
+        description: 'Endpoints around activities',
       },
-      tags: [
-        {
-          name: 'Activities',
-          description: 'Endpoints around activities',
-        },
-        {
-          name: 'My Teemio',
-          description: "Endpoints for CRUD'ing Teemio events",
-        },
-        {
-          name: 'Auth',
-          description: 'Endpoints for everything related to authentication',
-        },
-        {
-          name: 'User',
-          description: 'All endpoints related to user data',
-        },
-        {
-          name: 'default',
-          description: 'All other endpoints',
-        },
-      ],
-      components: {
-        securitySchemes: {
-          AccessToken: {
-            type: 'http',
-            scheme: 'bearer',
-            bearerFormat: 'JWT',
-            description: 'The JWT Authorization access token used to authenticate the logged in user ',
-          },
+      {
+        name: 'My Teemio',
+        description: "Endpoints for CRUD'ing Teemio events",
+      },
+      {
+        name: 'Auth',
+        description: 'Endpoints for everything related to authentication',
+      },
+      {
+        name: 'User',
+        description: 'All endpoints related to user data',
+      },
+      {
+        name: 'default',
+        description: 'All other endpoints',
+      },
+    ],
+    components: {
+      securitySchemes: {
+        AccessToken: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          description: 'The JWT Authorization access token used to authenticate the logged in user ',
         },
       },
     },
-  })
-);
+  },
+};
+
+if (process.env.NODE_ENV === 'development') {
+  swaggerSettings.documentation?.tags?.push({
+    name: 'Admin',
+    description: 'All admin routes. Only visible when NODE_ENV=development',
+  });
+}
+if (process.env.NODE_ENV === 'production') {
+  (swaggerSettings.exclude as (string | RegExp)[]).push(RegExp('/api/admin/*'));
+}
+
+app.use(swagger(swaggerSettings));
 
 // App register custom errors
 app.error({
@@ -97,7 +109,7 @@ app.use(ActivityController);
 app.use(MyTeemioController);
 app.use(AuthController);
 app.use(UserController);
-app.use(UserControllerExtra);
+app.use(AdminController);
 
 // Start the server
 app.listen(process.env.PORT ?? 3001);

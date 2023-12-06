@@ -6,14 +6,8 @@ import { ForbiddenDTO } from '../types/ForbiddenDTO';
 import { sendSignInEmail } from '../services/mailService';
 import { InternalServerErrorDTO } from '../types/InternalServerErrorDTO';
 import { errorHandler } from '../util/response';
-
-export const getUserDTO = t.Object({
-  id: t.String(),
-  name: t.String(),
-  email: t.Optional(t.Nullable(t.String())),
-  phone: t.Optional(t.Nullable(t.String())),
-  type: t.String(),
-});
+import { NotFoundError } from '../types/CustomErrors';
+import { getUserDTO } from './UserController';
 
 export const AuthController = new Elysia({ name: 'routes:auth' }).group('/auth', (app) =>
   app
@@ -30,15 +24,8 @@ export const AuthController = new Elysia({ name: 'routes:auth' }).group('/auth',
         const existingUser = await findUserByEmail(body.email);
 
         if (!existingUser) {
-          const newUser = await createNewUser({
-            name: 'Mikkel Bech',
-            type: 'user',
-            email: body.email,
-            phone: '+45 21775413',
-          });
-
-          set.status = 201;
-          return { message: 'User created!', user: mapUserToUserDTO(newUser) };
+          // If there is no user, then the user has not created any teemios.
+          throw new NotFoundError('The user was not found.');
         }
 
         // Send the token to the mail for magic login
@@ -49,7 +36,10 @@ export const AuthController = new Elysia({ name: 'routes:auth' }).group('/auth',
       },
       {
         error({ error, set }) {
-          return errorHandler(set.status, 500, `Error getting all activities: ${error}`);
+          if (error instanceof NotFoundError) {
+            return errorHandler(set.status, error.statusCode, `${error.message}`);
+          }
+          return errorHandler(set.status, 500, `Error signing in: ${error.message}`);
         },
         response: {
           200: t.Object({ message: t.String() }),
@@ -59,46 +49,7 @@ export const AuthController = new Elysia({ name: 'routes:auth' }).group('/auth',
         },
         body: t.Object({ email: t.String() }),
         detail: {
-          summary: 'Sign in using email',
-          tags: ['Auth'],
-        },
-      }
-    )
-    .post(
-      '/signin/token',
-      async ({ body, jwt, set }) => {
-        const existingUser = await findUserByEmail(body.email);
-
-        if (!existingUser) {
-          const newUser = await createNewUser({
-            name: 'Mikkel Bech',
-            type: 'user',
-            email: body.email,
-            phone: '+45 21775413',
-          });
-
-          set.status = 201;
-          return { message: 'User created!', user: mapUserToUserDTO(newUser) };
-        }
-
-        // Send the token to the mail for magic login
-        const token = await jwt.sign({ id: existingUser.id });
-
-        return { token: token };
-      },
-      {
-        error({ error, set }) {
-          return errorHandler(set.status, 500, `Error getting all activities: ${error}`);
-        },
-        response: {
-          200: t.Object({ token: t.Any() }),
-          201: t.Object({ message: t.String(), user: getUserDTO }),
-          403: ForbiddenDTO,
-          500: InternalServerErrorDTO,
-        },
-        body: t.Object({ email: t.String() }),
-        detail: {
-          summary: 'Get token as response for testing',
+          summary: 'Sign in using email. User must have created at least one teemio to be able to signin.',
           tags: ['Auth'],
         },
       }

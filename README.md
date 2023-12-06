@@ -19,6 +19,7 @@ docker compose -f docker-database.yml up
 Requires a `.env` file in the root directory!
 
 ```
+NODE_ENV=production # Production or Development
 DB_CONNECTION_STRING=mongodb://user:pass@localhost:27017/db?authSource=admin
 JWT_SECRET=xxxx
 RESEND_API_KEY=xxxx
