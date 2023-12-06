@@ -1,16 +1,14 @@
 import { Static } from 'elysia';
 import { ActivityDocument } from '../models/Activity';
 import { UserDocument } from '../models/User';
-import { getUserDTO } from '../controllers/AuthController';
 import { MyTeemioDocument } from '../models/MyTeemio';
 import { MyTeemioDTO } from '../controllers/MyTeemioController';
 import { ActivityDTO } from '../controllers/ActivityController';
 import { makeUrlSafe } from '../util/helperFunctions';
+import { getUserDTO } from '../controllers/UserController';
 
 // Function to map Activity to ActivityDTO
-export function mapActivityToActivityDTO(
-  activity: ActivityDocument
-): Static<typeof ActivityDTO> {
+export function mapActivityToActivityDTO(activity: ActivityDocument): Static<typeof ActivityDTO> {
   return {
     id: activity.id.toString(),
     url: activity.url,
@@ -36,9 +34,7 @@ export function mapActivityToActivityDTO(
   };
 }
 
-export function mapUserToUserDTO(
-  user: UserDocument
-): Static<typeof getUserDTO> {
+export function mapUserToUserDTO(user: UserDocument): Static<typeof getUserDTO> {
   return {
     id: user.id,
     name: user.name,
@@ -48,12 +44,15 @@ export function mapUserToUserDTO(
   };
 }
 
-export function mapMyTeemioToMyTeemioDTO(
-  teemio: MyTeemioDocument
-): Static<typeof MyTeemioDTO> {
+export function mapMyTeemioToMyTeemioDTO(teemio: MyTeemioDocument): Static<typeof MyTeemioDTO> {
   return {
     id: teemio.id,
-    final: null,
+    final: teemio.final
+      ? {
+          date: teemio.final.date.toString(),
+          activities: teemio.final.activities,
+        }
+      : undefined,
     status: teemio.status,
     organizer: teemio.organizer,
     activities: teemio.activities.map((v) => {

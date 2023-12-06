@@ -125,7 +125,7 @@ export const updateTeemioDTO = t.Object({
 });
 
 export const finalizeTeemioDTO = t.Object({
-  activities: t.Array(myTeemioCustomActivityOrReferenceWithoutTimeDTO),
+  activities: t.Array(myTeemioCustomActivityOrReferenceWithVotesDTO),
   date: t.String({ format: 'date' }),
   sendInvites: t.Boolean(),
 });
@@ -288,7 +288,6 @@ export const MyTeemioController = new Elysia({ name: 'routes:myteemio' }).group(
 
         await updateTeemioDateVotesById(foundTeemio, votingUser, body.datesVotedOn);
         await updateTeemioActivityVotesById(foundTeemio, votingUser, body.activitiesVotedOn);
-        console.log('test');
 
         return mapMyTeemioToMyTeemioDTO(foundTeemio);
       }
@@ -480,7 +479,7 @@ export const MyTeemioController = new Elysia({ name: 'routes:myteemio' }).group(
 
   app.use(isAuthenticated({ type: 'All' })).post(
     '/finalize/:id',
-    async ({ body, set, params: { id }, user }) => {
+    async ({ body, params: { id }, user }) => {
       if (mongoose.isValidObjectId(id)) {
         const foundTeemio = await findTeemioById(id);
 

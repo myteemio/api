@@ -59,8 +59,7 @@ export async function updateTeemioActivityVotesById(
       const activityName = activityVotedFor.activity.name;
       index = teemio.activities.findIndex((activity) => {
         // Double check that its a custom activity by checking if it has name property
-        const customActivity = activity.activity ;
-        console.log(customActivity)
+        const customActivity = activity.activity;
         if ('name' in customActivity) {
           return customActivity.name === activityName;
         }
@@ -93,9 +92,9 @@ export async function dateExistsInTeemio(teemio: Static<typeof MyTeemioDTO>, dat
   return dates.some((date) => teemioDates?.includes(date));
 }
 
-export async function finalizeTeemio(idorurl: string, teemio: Static<typeof finalizeTeemioDTO>) {
+export async function finalizeTeemio(id: string, teemio: Static<typeof finalizeTeemioDTO>) {
   return await MyTeemio.findByIdAndUpdate(
-    idorurl,
+    id,
     {
       final: {
         date: teemio.date,

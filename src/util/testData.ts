@@ -1,4 +1,4 @@
-export const mockUsers = [
+export const TESTmockUsers = [
   {
     name: 'Alice Smith',
     email: 'test@test.com',
@@ -26,7 +26,7 @@ export const mockUsers = [
   },
 ];
 
-export const mockActivities = [
+export const TESTmockActivities = [
   {
     name: 'Beach Yoga Retreat',
     url: 'beach-yoga-retreat',
@@ -134,7 +134,7 @@ export const mockActivities = [
   },
 ];
 
-export const mockTeemios = [
+export const TESTmockTeemios = [
   {
     status: 'active',
     activities: [
@@ -318,7 +318,7 @@ export const mockTeemios = [
   },
 ];
 
-export const mockSingleTeemioBody = {
+export const TESTmockSingleTeemioBody = {
   activities: [
     {
       activity: {
@@ -357,7 +357,7 @@ export const mockSingleTeemioBody = {
   ],
 };
 
-export const mockSingleActivityBody = {
+export const TESTmockSingleActivityBody = {
   name: 'Padel Viborg',
   url: 'padel-viborg',
   description: 'play some more padel',
@@ -380,7 +380,7 @@ export const mockSingleActivityBody = {
   estimatedHours: 2,
 };
 
-export const mockUpdateTeemioBody = {
+export const TESTmockUpdateTeemioBody = {
   activities: [
     {
       activity: {
@@ -430,7 +430,7 @@ export const mockUpdateTeemioBody = {
   ],
 };
 
-export const mockTeemioVoteBody = {
+export const TESTmockTeemioVoteBody = {
   activitiesVotedOn: [
     {
       activity: 'string',
@@ -443,7 +443,7 @@ export const mockTeemioVoteBody = {
   },
 };
 
-export const mockTeemioFinalizeBody = {
+export const TESTmockTeemioFinalizeBody = {
   activities: [
     {
       activity: {
@@ -468,11 +468,9 @@ export const mockTeemioFinalizeBody = {
   sendInvites: true,
 };
 
-export const mockUserBody = 
-  {
-    name: "weaofwaoef",
-    email: "kwaenmfwaf@test.com",
-    phone: "3123139813",
-    type: "user"
-  }
-
+export const TESTmockUserBody = {
+  name: 'weaofwaoef',
+  email: 'kwaenmfwaf@test.com',
+  phone: '3123139813',
+  type: 'user',
+};

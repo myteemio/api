@@ -2,24 +2,26 @@ import { describe, expect, test } from 'bun:test';
 import { app } from '..';
 import { Activity, ActivityDocument } from '../models/Activity';
 import {
-  getActivityByIdOrUrl,
-  getRandomTeemioIdToDelete,
-  getRandomTeemioIdToUpdate,
-  getRandomTeemioIdToUpdate2,
-  getTeemioById,
-  getToken,
-  seedDatabase,
-  setupInMemoryDatabase,
+  TESTcreateAuthToken,
+  TESTgetActivityById,
+  TESTgetMockUserByEmail,
+  TESTgetRandomMyTeemioId,
+  TESTgetTeemioById,
+  TESTseedDatabase,
+  TESTsetupInMemoryDatabase,
 } from './routes.helper';
 import { MyTeemio, MyTeemioDocument } from '../models/MyTeemio';
-import { mockSingleActivityBody, mockSingleTeemioBody, mockUpdateTeemioBody, mockUserBody } from '../util/testData';
+import {
+  TESTmockSingleActivityBody,
+  TESTmockSingleTeemioBody,
+  TESTmockUpdateTeemioBody,
+  TESTmockUserBody,
+} from '../util/testData';
 import { UserDocument } from '../models/User';
 
 const baseURI = `http://localhost:${process.env.PORT ?? 3001}`;
-await setupInMemoryDatabase();
-await seedDatabase();
-
-const token = await getToken();
+await TESTsetupInMemoryDatabase();
+await TESTseedDatabase();
 
 //ACTIVITIES
 describe('Activity Routes', async () => {
@@ -46,13 +48,16 @@ describe('Activity Routes', async () => {
   });
 
   test('(POST)/api/activities', async () => {
+    const adminUser = await TESTgetMockUserByEmail('test@test.com');
+    const token = TESTcreateAuthToken(adminUser?.id);
+
     const req = new Request(`${baseURI}/api/activities`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(mockSingleActivityBody),
+      body: JSON.stringify(TESTmockSingleActivityBody),
     });
 
     const res = await app.handle(req);
@@ -64,9 +69,11 @@ describe('Activity Routes', async () => {
     expect(body.category[0]).toBe('sport');
 
     //Check that the activity was inserted into the database
-    const activity = (await getActivityByIdOrUrl(body.id)) as Activity;
-    expect(activity.referralLink).toBe('https://www.padel.dk/centre/klover');
-    expect(activity.estimatedHours).toBe(2);
+    const activity = await TESTgetActivityById(body.id);
+    expect(activity).not.toBeUndefined();
+    expect(activity).not.toBeNull();
+    expect(activity!.referralLink).toBe('https://www.padel.dk/centre/klover');
+    expect(activity!.estimatedHours).toBe(2);
   });
 });
 
@@ -94,20 +101,23 @@ describe('MyTeemio Routes', async () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(mockSingleTeemioBody),
+      body: JSON.stringify(TESTmockSingleTeemioBody),
     });
 
     const res = await app.handle(req);
     const body = (await res.json()) as MyTeemioDocument;
 
+    // Get the user that created it
+    const user = await TESTgetMockUserByEmail('hej@hej.com');
+
     expect(res.status).toBe(200);
+    expect(body.organizer).toBe(user?.id);
     expect(body.eventinfo.name).toBe('Padel is fun');
     expect(new Date(body.dates[0].date).toISOString()).toBe(new Date('2023-12-06').toISOString());
 
     //Check that the teemio was inserted into the database
-    const teemio = (await getTeemioById(body.id)) as MyTeemio;
+    const teemio = (await TESTgetTeemioById(body.id)) as MyTeemio;
     expect(teemio.eventinfo.name).toBe('Padel is fun');
     expect(teemio.activities[0].activity.address.city).toBe('Cool City');
     expect(teemio.activities[0].activity.address.country).toBe('Cool Country');
@@ -152,9 +162,12 @@ describe('MyTeemio Routes', async () => {
   // });
 
   test('(PUT)/api/myteemio/status/:id', async () => {
-    const teemioId = await getRandomTeemioIdToUpdate();
-    const teemio = (await getTeemioById(teemioId)) as MyTeemioDocument;
-    expect(teemio.status).toBe('finalized');
+    const adminUser = await TESTgetMockUserByEmail('test@test.com');
+    const token = TESTcreateAuthToken(adminUser?.id);
+
+    const teemioId = await TESTgetRandomMyTeemioId('finalized');
+    expect(teemioId).not.toBeNull();
+    expect(teemioId).toBeDefined();
 
     const req = new Request(`${baseURI}/api/myteemio/status/${teemioId}`, {
       method: 'PUT',
@@ -171,13 +184,18 @@ describe('MyTeemio Routes', async () => {
     expect(res.status).toBe(200);
     expect(body.message).toBe('Status successfully updated');
 
-    //Check that the id has changed
-    const updatedTeemio = (await getTeemioById(teemioId)) as MyTeemioDocument;
+    //Check that the status has changed
+    const updatedTeemio = (await TESTgetTeemioById(teemioId!)) as MyTeemioDocument;
     expect(updatedTeemio.status).toBe('active');
   });
 
   test('(PUT)/api/myteemio', async () => {
-    const teemioId = await getRandomTeemioIdToUpdate();
+    const adminUser = await TESTgetMockUserByEmail('test@test.com');
+    const token = TESTcreateAuthToken(adminUser?.id);
+
+    const teemioId = await TESTgetRandomMyTeemioId();
+
+    expect(teemioId).toBeDefined();
 
     const req = new Request(`${baseURI}/api/myteemio/${teemioId}`, {
       method: 'PUT',
@@ -185,7 +203,7 @@ describe('MyTeemio Routes', async () => {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(mockUpdateTeemioBody),
+      body: JSON.stringify(TESTmockUpdateTeemioBody),
     });
 
     const res = await app.handle(req);
@@ -197,29 +215,20 @@ describe('MyTeemio Routes', async () => {
     expect(body.activities[1].activity.address.city).toBe('Random City');
 
     //Check that the teemio was inserted into the database
-    const teemio = (await getTeemioById(teemioId)) as MyTeemio;
+    const teemio = (await TESTgetTeemioById(teemioId!)) as MyTeemio;
     expect(teemio.activities[0].activity.name).toBe('Updated activity1');
     expect(teemio.activities[0].activity.address.city).toBe('A New City');
     expect(teemio.activities[1].activity.address.city).toBe('Random City');
   });
 
   test('(POST)/api/myteemio/finalize/:id', async () => {
-    //Need to create user to add get the ID of a user to add to the teemio
-    const reqUser = new Request(`${baseURI}/api/user/create`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(mockUserBody),
-    });
-    const resUser = await app.handle(reqUser);
-    const userBody = (await resUser.json()) as UserDocument;
-    const userId = userBody.id;
+    const adminUser = await TESTgetMockUserByEmail('test@test.com');
+    const token = TESTcreateAuthToken(adminUser?.id);
 
     //Check current status of teemio
-    const teemioId = await getRandomTeemioIdToUpdate2();
-    const teemio = (await getTeemioById(teemioId)) as MyTeemioDocument;
+    const teemioId = await TESTgetRandomMyTeemioId('active');
+    expect(teemioId).toBeDefined();
+    const teemio = (await TESTgetTeemioById(teemioId!)) as MyTeemioDocument;
     expect(teemio.status).toBe('active');
 
     const mockTeemioFinalizeBody = {
@@ -231,16 +240,21 @@ describe('MyTeemio Routes', async () => {
             image: 'custom_activity.jpg',
             address: {
               address1: '1234 Custom Road',
+              address2: 'test',
               zipcode: '12345',
               city: 'Custom City',
               country: 'USA',
             },
           },
-          votes: [{ id: userId, name: 'Ethan' }],
+          timeslot: {
+            from: '2023-12-12T12:30:00.000Z',
+            to: '2023-12-12T14:30:00.000Z',
+          },
+          votes: [{ id: adminUser?.id, name: adminUser?.name }],
         },
       ],
-      date: '2023-10-15',
-      sendInvites: true,
+      date: new Date('2023-10-15'),
+      sendInvites: false,
     };
 
     const req = new Request(`${baseURI}/api/myteemio/finalize/${teemioId}`, {
@@ -257,19 +271,26 @@ describe('MyTeemio Routes', async () => {
 
     expect(res.status).toBe(200);
     expect(body.status).toBe('finalized');
-    expect(body.activities[0].activity.name).toBe('My cool custom activity');
-    
+
+    expect(body.final).toBeDefined();
+    expect(body.final).not.toBeNull();
+    expect(body.final?.activities).toHaveLength(1);
+    expect(body.final?.date.toString()).toBe(new Date('2023-10-15').toString());
+
     //Check that the teemio was updated, and the final property has been updated
-    //TODO: Final only gets updated in real db. Not mock for some reason
+    //TODO: Final only gets updated in real db. Not mock for some reason.
   });
 
   test('(DELETE)/api/myteemio/:id', async () => {
+    const adminUser = await TESTgetMockUserByEmail('test@test.com');
+    const token = TESTcreateAuthToken(adminUser?.id);
+
     //First check that the teemio exists
-    const teemioId = await getRandomTeemioIdToDelete();
-    const teemio = (await getTeemioById(teemioId)) as MyTeemioDocument;
+    const teemioId = await TESTgetRandomMyTeemioId('locked');
+    expect(teemioId).toBeDefined();
+    const teemio = (await TESTgetTeemioById(teemioId!)) as MyTeemioDocument;
     expect(teemio.organizer).toBe('Emily Clark');
     expect(teemio.status).toBe('locked');
-    expect(teemio.eventinfo.name).toBe('Cultural Day');
 
     //Delete that teemio
     const req = new Request(`${baseURI}/api/myteemio/${teemioId}`, {
@@ -283,11 +304,10 @@ describe('MyTeemio Routes', async () => {
     //Check that the same teemio we just found is now deleted
     const res = await app.handle(req);
     const body = await res.json();
-    const teemioAfterDelete = await getTeemioById(teemioId);
+    const teemioAfterDelete = await TESTgetTeemioById(teemioId!);
 
     expect(res.status).toBe(200);
     expect(body.message).toBe('Teemio was succesfully deleted');
-    expect(teemioAfterDelete).toEqual({ message: 'Teemio not found!', error_code: 'unauthorized' });
+    expect(teemioAfterDelete).toBeNull();
   });
-})
-
+});

@@ -13,11 +13,13 @@
     "dayjs": "^1.11.10",
     "elysia": "^0.7.30",
     "elysia-helmet": "^1.0.1",
+    "jsonwebtoken": "^9.0.2",
     "mongodb-memory-server-core": "^9.1.1",
     "mongoose": "^8.0.2",
     "resend": "^2.0.0"
   },
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.5",
     "bun-types": "latest"
   },
   "module": "src/index.js"
