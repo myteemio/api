@@ -4,6 +4,7 @@ import { InternalServerErrorDTO } from '../types/InternalServerErrorDTO';
 import { NotFoundDTO } from '../types/NotFoundDTO';
 import {
   IsActivityTimeslotsValid,
+  activityExistsInTeemio,
   createTeemio,
   dateExistsInTeemio,
   deleteTeemioById,
@@ -40,7 +41,7 @@ export const myTeemioCustomActivityDTO = t.Object({
   }),
 });
 
-const myTeemioCustomActivityOrReferenceWithVotesDTO = t.Object({
+export const myTeemioCustomActivityOrReferenceWithVotesDTO = t.Object({
   activity: t.Union([t.String({ description: 'ID of activity' }), myTeemioCustomActivityDTO]),
   timeslot: t.Object({
     from: t.String({ format: 'date-time' }),
@@ -91,7 +92,10 @@ export const MyTeemioDTO = t.Object({
   id: t.Optional(t.String()),
   status: MyTeemioStatusEnum,
   activities: MyTeemioActivitiesWithVotes,
-  organizer: t.String(),
+  organizer: t.Object({
+    name: t.String(),
+    email: t.String(),
+  }),
   eventinfo: t.Object({
     name: t.String(),
     description: t.String(),
@@ -183,12 +187,14 @@ export const MyTeemioController = new Elysia({ name: 'routes:myteemio' }).group(
           ...body.organizer,
           type: 'user',
         });
-        userid = newUser.id;
       }
 
       const newTeemio: Static<typeof MyTeemioDTO> = {
         ...body,
-        organizer: userid,
+        organizer: {
+          name: body.organizer.name,
+          email: body.organizer.email,
+        },
         status: 'active',
         activities: body.activities.map((v) => {
           return { ...v, votes: [] };
@@ -223,13 +229,17 @@ export const MyTeemioController = new Elysia({ name: 'routes:myteemio' }).group(
 
   app.post(
     '/vote/:id',
-    async ({ body, set, params: { id } }) => {
+    async ({ body, params: { id } }) => {
       //Check om teemio eksisterer
       if (mongoose.isValidObjectId(id)) {
         const foundTeemio = await findTeemioById(id);
 
         if (!foundTeemio) {
           throw new NotFoundError('Teemio not found!');
+        }
+
+        if (foundTeemio.status !== 'active') {
+          throw new BadRequestError('Teemio is not active');
         }
 
         const activityRefIds = body.activitiesVotedOn.reduce(function (result: string[], activity) {
@@ -321,7 +331,7 @@ export const MyTeemioController = new Elysia({ name: 'routes:myteemio' }).group(
 
   app.get(
     ':idorurl',
-    async ({ params: { idorurl }, set }) => {
+    async ({ params: { idorurl } }) => {
       if (mongoose.isValidObjectId(idorurl)) {
         const teemio = await findTeemioById(idorurl);
         if (teemio) {
@@ -365,11 +375,12 @@ export const MyTeemioController = new Elysia({ name: 'routes:myteemio' }).group(
           throw new NotFoundError('The Teemio was not found');
         }
 
-        if (!isOwnerOfTeemioOrAdmin(foundTeemio.organizer, user!)) {
+        if (!isOwnerOfTeemioOrAdmin(foundTeemio.organizer.email, user!)) {
           throw new ForbiddenError('You have no access to this Teemio');
         }
 
         const updatedTeemio = await updateTeemioById(id, body);
+
         if (updatedTeemio) {
           return mapMyTeemioToMyTeemioDTO(updatedTeemio);
         }
@@ -437,7 +448,7 @@ export const MyTeemioController = new Elysia({ name: 'routes:myteemio' }).group(
           throw new NotFoundError('Teemio not found!');
         }
 
-        if (!isOwnerOfTeemioOrAdmin(foundTeemio.organizer, user!)) {
+        if (!isOwnerOfTeemioOrAdmin(foundTeemio.organizer.email, user!)) {
           throw new ForbiddenError('You do not have access to this Teemio');
         }
 
@@ -487,11 +498,19 @@ export const MyTeemioController = new Elysia({ name: 'routes:myteemio' }).group(
           throw new NotFoundError('Teemio not found');
         }
 
-        if (!isOwnerOfTeemioOrAdmin(foundTeemio.organizer, user!)) {
+        if (!isOwnerOfTeemioOrAdmin(foundTeemio.organizer.email, user!)) {
           throw new ForbiddenError('You have no access to this Teemio');
         }
 
-        //TODO: Should have some more validation weather or not the finalized activities exists in the teemio
+        const dateExists = await dateExistsInTeemio(mapMyTeemioToMyTeemioDTO(foundTeemio), stringToDayjs(body.date));
+        if (!dateExists) {
+          throw new BadRequestError('The date does not exist in the teemio');
+        }
+
+        const activityExists = await activityExistsInTeemio(mapMyTeemioToMyTeemioDTO(foundTeemio), body.activities);
+        if (!activityExists.exists) {
+          throw new BadRequestError(`The activity: ${activityExists.activity} does not exist in the teemio`);
+        }
 
         const finalize = await finalizeTeemio(id, body);
         if (finalize) {
@@ -538,7 +557,7 @@ export const MyTeemioController = new Elysia({ name: 'routes:myteemio' }).group(
       if (mongoose.isValidObjectId(id)) {
         const foundTeemio = await findTeemioById(id);
         if (foundTeemio) {
-          if (!isOwnerOfTeemioOrAdmin(foundTeemio.organizer, user!)) {
+          if (!isOwnerOfTeemioOrAdmin(foundTeemio.organizer.email, user!)) {
             throw new ForbiddenError('You have no access to this teemio!');
           }
 

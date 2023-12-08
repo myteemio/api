@@ -15,9 +15,7 @@ import {
   TESTmockSingleActivityBody,
   TESTmockSingleTeemioBody,
   TESTmockUpdateTeemioBody,
-  TESTmockUserBody,
 } from '../util/testData';
-import { UserDocument } from '../models/User';
 
 const baseURI = `http://localhost:${process.env.PORT ?? 3001}`;
 await TESTsetupInMemoryDatabase();
@@ -91,7 +89,8 @@ describe('MyTeemio Routes', async () => {
     const body = (await res.json()) as MyTeemio;
 
     expect(res.status).toBe(200);
-    expect(body.organizer).toBe('Emily Clark');
+    expect(body.organizer.name).toBe('Ethan Hunt');
+    expect(body.organizer.email).toBe('ethan@example.com');
     expect(body.status).toBe('locked');
     expect(body.dates[0].votes[0]).toEqual({ id: 'user3' });
   });
@@ -112,7 +111,8 @@ describe('MyTeemio Routes', async () => {
     const user = await TESTgetMockUserByEmail('hej@hej.com');
 
     expect(res.status).toBe(200);
-    expect(body.organizer).toBe(user?.id);
+    expect(body.organizer.name).toBe(user?.name || "");
+    expect(body.organizer.email).toBe(user?.email || "");
     expect(body.eventinfo.name).toBe('Padel is fun');
     expect(new Date(body.dates[0].date).toISOString()).toBe(new Date('2023-12-06').toISOString());
 
@@ -123,43 +123,42 @@ describe('MyTeemio Routes', async () => {
     expect(teemio.activities[0].activity.address.country).toBe('Cool Country');
   });
 
-  //TODO: Fix the updateTeemioActivityVotesById function in myTeemioService.ts
-  // test('(POST)/api/myteemio/vote/:id', async () => {
-  //   const mockTeemioVoteBody = {
-  //     activitiesVotedOn: [
-  //       {
-  //         activity: {
-  //           name: 'My cool custom activity2',
-  //           description: 'This is a custom activity2',
-  //           image: 'custom_activit2y.jpg',
-  //           address: {
-  //             address1: '123412313Custom Road',
-  //             zipcode: '12345123',
-  //             city: 'Custom City2',
-  //             country: 'Cool Country',
-  //           },
-  //         },
-  //       },
-  //     ],
-  //     datesVotedOn: ['2023-12-06'],
-  //     userinfo: {
-  //       name: 'Thomas',
-  //       email: 'thomas@gmail.com',
-  //     },
-  //   };
-  //   const teemioId = await getRandomTeemioIdToUpdate();
-  //   const req = new Request(`${baseURI}/api/myteemio/vote/${teemioId}`, {
-  //     method: 'POST',
-  //     headers: {
-  //       'Content-Type': 'application/json',
-  //     },
-  //     body: JSON.stringify(mockTeemioVoteBody),
-  //   });
+  test('(POST)/api/myteemio/vote/:id', async () => {
+    const mockTeemioVoteBody = {
+      activitiesVotedOn: [
+        {
+          activity: {
+            name: 'My cool custom activity2',
+            description: 'This is a custom activity2',
+            image: 'custom_activit2y.jpg',
+            address: {
+              address1: '123412313Custom Road',
+              zipcode: '12345123',
+              city: 'Custom City2',
+              country: 'Cool Country',
+            },
+          },
+        },
+      ],
+      datesVotedOn: ['2023-12-06'],
+      userinfo: {
+        name: 'Thomas',
+        email: 'thomas@gmail.com',
+      },
+    };
+    const teemioId = await TESTgetRandomMyTeemioId();
+    const req = new Request(`${baseURI}/api/myteemio/vote/${teemioId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(mockTeemioVoteBody),
+    });
 
-  //   const res = await app.handle(req);
-  //   const body = (await res.json()) as MyTeemioDocument;
+    const res = await app.handle(req);
+    const body = (await res.json()) as MyTeemioDocument;
 
-  // });
+  });
 
   test('(PUT)/api/myteemio/status/:id', async () => {
     const adminUser = await TESTgetMockUserByEmail('test@test.com');
@@ -234,18 +233,7 @@ describe('MyTeemio Routes', async () => {
     const mockTeemioFinalizeBody = {
       activities: [
         {
-          activity: {
-            name: 'My cool custom activity',
-            description: 'This is a custom activity',
-            image: 'custom_activity.jpg',
-            address: {
-              address1: '1234 Custom Road',
-              address2: 'test',
-              zipcode: '12345',
-              city: 'Custom City',
-              country: 'USA',
-            },
-          },
+          activity: teemio.activities[0].activity,
           timeslot: {
             from: '2023-12-12T12:30:00.000Z',
             to: '2023-12-12T14:30:00.000Z',
@@ -253,7 +241,7 @@ describe('MyTeemio Routes', async () => {
           votes: [{ id: adminUser?.id, name: adminUser?.name }],
         },
       ],
-      date: new Date('2023-10-15'),
+      date: teemio.dates[0].date,
       sendInvites: false,
     };
 
@@ -275,10 +263,7 @@ describe('MyTeemio Routes', async () => {
     expect(body.final).toBeDefined();
     expect(body.final).not.toBeNull();
     expect(body.final?.activities).toHaveLength(1);
-    expect(body.final?.date.toString()).toBe(new Date('2023-10-15').toString());
-
-    //Check that the teemio was updated, and the final property has been updated
-    //TODO: Final only gets updated in real db. Not mock for some reason.
+    expect(body.final?.date.toString()).toBe(teemio.dates[0].date.toString());
   });
 
   test('(DELETE)/api/myteemio/:id', async () => {
@@ -289,7 +274,8 @@ describe('MyTeemio Routes', async () => {
     const teemioId = await TESTgetRandomMyTeemioId('locked');
     expect(teemioId).toBeDefined();
     const teemio = (await TESTgetTeemioById(teemioId!)) as MyTeemioDocument;
-    expect(teemio.organizer).toBe('Emily Clark');
+    expect(teemio.organizer.name).toBe('Ethan Hunt');
+    expect(teemio.organizer.email).toBe('ethan@example.com');
     expect(teemio.status).toBe('locked');
 
     //Delete that teemio

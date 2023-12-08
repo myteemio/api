@@ -6,6 +6,7 @@ import {
   MyTeemioDTO,
   MyTeemioStatusEnum,
   finalizeTeemioDTO,
+  myTeemioCustomActivityOrReferenceWithVotesDTO,
   updateTeemioDTO,
 } from '../controllers/MyTeemioController';
 import { MyTeemio, MyTeemioDocument } from '../models/MyTeemio';
@@ -92,6 +93,32 @@ export async function dateExistsInTeemio(teemio: Static<typeof MyTeemioDTO>, dat
   return dates.some((date) => teemioDates?.includes(date));
 }
 
+export async function activityExistsInTeemio(
+  teemio: Static<typeof MyTeemioDTO>,
+  activities: Static<typeof myTeemioCustomActivityOrReferenceWithVotesDTO>[]
+) {
+  const teemioActivities = teemio.activities.map((activity) => {
+    if (typeof activity.activity === 'string') {
+      return activity.activity;
+    } else {
+      return activity.activity.name;
+    }
+  });
+
+  for (const activity of activities) {
+    if (typeof activity.activity === 'string') {
+      if (!teemioActivities.includes(activity.activity)) {
+        return {exists: false, activity: activity.activity};
+      }
+    } else {
+      if (!teemioActivities.includes(activity.activity.name)) {
+        return {exists: false, activity: activity.activity.name};
+      }
+    }
+  }
+  return {exists: true};
+}
+
 export async function finalizeTeemio(id: string, teemio: Static<typeof finalizeTeemioDTO>) {
   return await MyTeemio.findByIdAndUpdate(
     id,
@@ -136,4 +163,8 @@ export function IsActivityTimeslotsValid(
     }
   }
   return true;
+}
+
+export async function getTeemiosByEmail(email: string) {
+  return await MyTeemio.find({ organizer: email });
 }

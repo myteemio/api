@@ -147,7 +147,10 @@ export const TESTmockTeemios = [
         votes: [{ id: 'user1', name: 'Alice' }],
       },
     ],
-    organizer: 'John Doe',
+    organizer: {
+      name: 'Charlie Brown',
+      email: 'charlie@example.com',
+    },
     eventinfo: {
       name: 'Annual Company Retreat',
       description: 'A fun retreat for all employees',
@@ -173,7 +176,10 @@ export const TESTmockTeemios = [
         votes: [{ id: 'user2', name: 'Bob' }],
       },
     ],
-    organizer: 'Emily Clark',
+    organizer: {
+      name: 'Ethan Hunt',
+      email: 'ethan@example.com',
+    },
     eventinfo: {
       name: 'Cultural Day',
       description: 'Exploring local art and culture',
@@ -199,7 +205,10 @@ export const TESTmockTeemios = [
         votes: [{ id: 'user5', name: 'Charlie' }],
       },
     ],
-    organizer: 'Sarah Lee',
+    organizer: {
+      name: 'Jenna Coleman',
+      email: 'jenna@example.com',
+    },
     eventinfo: {
       name: 'Outdoor Adventures',
       description: 'Hiking and exploring nature',
@@ -214,7 +223,16 @@ export const TESTmockTeemios = [
     ],
     final: {
       date: '2023-12-20',
-      activities: ['656f58f69813ecff331dc779'],
+      activities: [
+        {
+          activity: '656f53446b9f52b36fbde090',
+          timeslot: {
+            from: '2023-12-20T12:30:00.000Z',
+            to: '2023-12-20T14:30:00.000Z',
+          },
+          votes: [{ id: 'user5', name: 'Charlie' }],
+        },
+      ],
     },
   },
   {
@@ -239,7 +257,10 @@ export const TESTmockTeemios = [
         votes: [{ id: 'user7', name: 'Diana' }],
       },
     ],
-    organizer: 'Mike Johnson',
+    organizer: {
+      name: 'George Lucas',
+      email: 'george@example.com',
+    },
     eventinfo: {
       name: 'Wellness Weekend',
       description: 'Relaxing activities for health and wellness',
@@ -279,7 +300,10 @@ export const TESTmockTeemios = [
         votes: [{ id: 'user10', name: 'Ethan' }],
       },
     ],
-    organizer: 'Linda Smith',
+    organizer: {
+      name: 'Ian Malcolm',
+      email: 'ian@example.com',
+    },
     eventinfo: {
       name: 'Culinary Exploration',
       description: 'Cooking class for food enthusiasts',
@@ -311,8 +335,12 @@ export const TESTmockTeemios = [
               country: 'Cool Country',
             },
           },
+          timeslot: {
+            from: '2023-12-18T12:30:00.000Z',
+            to: '2023-12-18T14:30:00.000Z',
+          },
+          votes: [{ id: 'user10', name: 'Ethan' }],
         },
-        '656f588b78f1195d32047040',
       ],
     },
   },

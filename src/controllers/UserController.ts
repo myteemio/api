@@ -1,12 +1,12 @@
 import Elysia, { t } from 'elysia';
 import { isAuthenticated } from '../plugins/authPlugin';
-import { mapUserToUserDTO } from '../services/mappers';
+import { mapMyTeemioToMyTeemioDTO, mapUserToUserDTO } from '../services/mappers';
 import { InternalServerErrorDTO } from '../types/InternalServerErrorDTO';
 import { NotFoundDTO } from '../types/NotFoundDTO';
-import { BadRequestError, NotFoundError } from '../types/CustomErrors';
+import { NotFoundError } from '../types/CustomErrors';
 import { errorHandler } from '../util/response';
-import { BadRequestDTO } from '../types/BadRequestDTO';
-import { createNewUser } from '../services/userService';
+import { MyTeemioDTO } from './MyTeemioController';
+import { getTeemiosByEmail } from '../services/myTeemioService';
 
 export const getUserDTO = t.Object({
   id: t.String(),
@@ -23,12 +23,24 @@ export const UserController = new Elysia({ name: 'routes:user' }).group('/user',
     .use(isAuthenticated({ type: 'UserOnly' }))
     .get(
       '/myteemios',
-      ({ set }) => {
-        //TODO: implement
+      async ({ set, user }) => {
+        if (!user || !user.email) {
+          throw new NotFoundError('User not found!');
+        }
+
+        const teemios = await getTeemiosByEmail(user.email);
+
+        return teemios.map((teemio) => mapMyTeemioToMyTeemioDTO(teemio));
+
         set.status = 500;
         return { message: 'Not implemented', error_code: 'notimplemented' };
       },
       {
+        response: {
+          200: t.Array(MyTeemioDTO),
+          404: NotFoundDTO,
+          500: InternalServerErrorDTO,
+        },
         detail: {
           summary: "Show a list of ID's of all the Teemios you have created",
           tags: ['User'],

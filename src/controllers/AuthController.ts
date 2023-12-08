@@ -1,7 +1,6 @@
 import Elysia, { t } from 'elysia';
-import { createNewUser, findUserByEmail } from '../services/userService';
+import { findUserByEmail } from '../services/userService';
 import jwt from '@elysiajs/jwt';
-import { mapUserToUserDTO } from '../services/mappers';
 import { ForbiddenDTO } from '../types/ForbiddenDTO';
 import { sendSignInEmail } from '../services/mailService';
 import { InternalServerErrorDTO } from '../types/InternalServerErrorDTO';
@@ -20,7 +19,7 @@ export const AuthController = new Elysia({ name: 'routes:auth' }).group('/auth',
     )
     .post(
       '/signin',
-      async ({ body, jwt, set }) => {
+      async ({ body, jwt }) => {
         const existingUser = await findUserByEmail(body.email);
 
         if (!existingUser) {

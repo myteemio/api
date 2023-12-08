@@ -19,8 +19,8 @@ export async function findUserById(id: string) {
   return await User.findById(id);
 }
 
-export function isOwnerOfTeemioOrAdmin(organizerId: string, user: UserDocument) {
-  if (user.type !== 'admin' && organizerId !== user.id) {
+export function isOwnerOfTeemioOrAdmin(organizerEmail: string, user: UserDocument) {
+  if (user.type !== 'admin' && organizerEmail !== user.email) {
     return false;
   }
   return true;

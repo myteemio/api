@@ -1,9 +1,8 @@
 import mongoose from 'mongoose';
 import { User } from '../models/User';
-import { app } from '..';
-import { Activity, ActivityDocument } from '../models/Activity';
+import { Activity } from '../models/Activity';
 import { TESTmockActivities, TESTmockTeemios, TESTmockUsers } from '../util/testData';
-import { MyTeemio, MyTeemioDocument } from '../models/MyTeemio';
+import { MyTeemio } from '../models/MyTeemio';
 import MongoMemoryServer from 'mongodb-memory-server-core';
 import jwt from 'jsonwebtoken';
 import { Static } from 'elysia';
@@ -56,7 +55,7 @@ export async function TESTgetMockUserByEmail(email: string) {
     try {
       return await User.findOne({ email: email });
     } catch (error) {
-      console.log('Couldnt find mock use', error);
+      console.log('Couldnt find mock user', error);
     }
   }
 }

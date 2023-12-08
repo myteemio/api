@@ -61,9 +61,11 @@ const myTeemioSchema = new mongoose.Schema({
   },
   activities: [myTeemioActivitySchema],
   organizer: {
-    type: String,
-    //Cant make put work with user:ref
-    required: true,
+    type: {
+      name: { type: String, ref: User, required: true },
+      email: {type: String, ref: User, required: true}
+    },
+  required: true,
   },
   eventinfo: {
     type: eventInfoSchema,
