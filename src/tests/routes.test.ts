@@ -18,7 +18,6 @@ const baseURI = `http://localhost:${process.env.PORT ?? 3001}`;
 await TESTsetupInMemoryDatabase();
 await TESTseedDatabase();
 
-
 // ------------------ User Routes------------------ //
 describe('User Routes', async () => {
   test('(GET)/api/user/myteemios', async () => {
@@ -361,5 +360,27 @@ describe('Admin Routes', async () => {
     expect(body.name).toBe('test');
     expect(body.email).toBe('newuser@test.com');
     expect(body.phone).toBe('+4512345678');
+  });
+});
+
+// ------------------ Auth Routes ------------------ //
+describe('Auth Routes', async () => {
+  test('(POST)/api/auth/signin', async () => {
+    const user = await TESTgetMockUserByEmail('test@test.com');
+
+    const req = new Request(`${baseURI}/api/auth/signin`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email: user?.email }),
+    });
+
+    const res = await app.handle(req);
+    const body = (await res.json()) as { message: string };
+
+    expect(res.status).toBe(200);
+    expect(body.message).toBe('Check your email for magic link to login!');
+    
   });
 });
