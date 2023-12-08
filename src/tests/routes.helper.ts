@@ -10,8 +10,6 @@ import { MyTeemioStatusEnum } from '../controllers/MyTeemioController';
 
 let mongodbConn: MongoMemoryServer; // Your MongoDB connection string
 
-const baseURI = `http://localhost:${process.env.PORT ?? 3001}`;
-
 export async function TESTsetupInMemoryDatabase() {
   console.log('Setting up!');
   const mongod = await MongoMemoryServer.create();

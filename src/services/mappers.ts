@@ -54,7 +54,10 @@ export function mapMyTeemioToMyTeemioDTO(teemio: MyTeemioDocument): Static<typeo
         }
       : undefined,
     status: teemio.status,
-    organizer: teemio.organizer,
+    organizer: {
+      name: teemio.organizer.name,
+      email: teemio.organizer.email,
+    },
     activities: teemio.activities.map((v) => {
       return {
         activity: v.activity,

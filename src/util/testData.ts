@@ -15,7 +15,7 @@ export const TESTmockUsers = [
     type: 'admin',
   },
   { name: 'Fiona Gallagher', type: 'user' },
-  { name: 'George Lucas', email: 'george@example.com', type: 'user' },
+  { name: 'George Lucas', email: 'george@example.com',phone: '+1313819383', type: 'user' },
   { name: 'Hannah Abbott', phone: '+812345678', type: 'user' },
   { name: 'Ian Malcolm', email: 'ian@example.com', type: 'user' },
   {

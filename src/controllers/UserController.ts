@@ -23,17 +23,18 @@ export const UserController = new Elysia({ name: 'routes:user' }).group('/user',
     .use(isAuthenticated({ type: 'UserOnly' }))
     .get(
       '/myteemios',
-      async ({ set, user }) => {
+      async ({ user }) => {
         if (!user || !user.email) {
           throw new NotFoundError('User not found!');
         }
 
         const teemios = await getTeemiosByEmail(user.email);
 
-        return teemios.map((teemio) => mapMyTeemioToMyTeemioDTO(teemio));
+        if (teemios.length <= 0) {
+          throw new NotFoundError('No Teemios found!');
+        }
 
-        set.status = 500;
-        return { message: 'Not implemented', error_code: 'notimplemented' };
+        return teemios.map((teemio) => mapMyTeemioToMyTeemioDTO(teemio));
       },
       {
         response: {

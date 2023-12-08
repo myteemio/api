@@ -108,15 +108,15 @@ export async function activityExistsInTeemio(
   for (const activity of activities) {
     if (typeof activity.activity === 'string') {
       if (!teemioActivities.includes(activity.activity)) {
-        return {exists: false, activity: activity.activity};
+        return { exists: false, activity: activity.activity };
       }
     } else {
       if (!teemioActivities.includes(activity.activity.name)) {
-        return {exists: false, activity: activity.activity.name};
+        return { exists: false, activity: activity.activity.name };
       }
     }
   }
-  return {exists: true};
+  return { exists: true };
 }
 
 export async function finalizeTeemio(id: string, teemio: Static<typeof finalizeTeemioDTO>) {
@@ -166,5 +166,5 @@ export function IsActivityTimeslotsValid(
 }
 
 export async function getTeemiosByEmail(email: string) {
-  return await MyTeemio.find({ organizer: email });
+  return await MyTeemio.find({ 'organizer.email': email });
 }

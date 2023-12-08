@@ -11,17 +11,14 @@ import {
   TESTsetupInMemoryDatabase,
 } from './routes.helper';
 import { MyTeemio, MyTeemioDocument } from '../models/MyTeemio';
-import {
-  TESTmockSingleActivityBody,
-  TESTmockSingleTeemioBody,
-  TESTmockUpdateTeemioBody,
-} from '../util/testData';
+import { TESTmockSingleActivityBody, TESTmockSingleTeemioBody, TESTmockUpdateTeemioBody } from '../util/testData';
+import { UserDocument } from '../models/User';
 
 const baseURI = `http://localhost:${process.env.PORT ?? 3001}`;
 await TESTsetupInMemoryDatabase();
 await TESTseedDatabase();
 
-//ACTIVITIES
+// ------------------ Activities Routes ------------------ //
 describe('Activity Routes', async () => {
   test('(GET)/api/activities', async () => {
     const req = new Request(`${baseURI}/api/activities`);
@@ -75,9 +72,8 @@ describe('Activity Routes', async () => {
   });
 });
 
+// ------------------ MyTeemio Routes ------------------ //
 describe('MyTeemio Routes', async () => {
-  //MYTEEMIO
-
   test('(GET)/api/myteemio/:idorurl', async () => {
     const req = new Request(`${baseURI}/api/myteemio/cultural-day`, {
       method: 'GET',
@@ -111,8 +107,8 @@ describe('MyTeemio Routes', async () => {
     const user = await TESTgetMockUserByEmail('hej@hej.com');
 
     expect(res.status).toBe(200);
-    expect(body.organizer.name).toBe(user?.name || "");
-    expect(body.organizer.email).toBe(user?.email || "");
+    expect(body.organizer.name).toBe(user?.name || '');
+    expect(body.organizer.email).toBe(user?.email || '');
     expect(body.eventinfo.name).toBe('Padel is fun');
     expect(new Date(body.dates[0].date).toISOString()).toBe(new Date('2023-12-06').toISOString());
 
@@ -157,7 +153,6 @@ describe('MyTeemio Routes', async () => {
 
     const res = await app.handle(req);
     const body = (await res.json()) as MyTeemioDocument;
-
   });
 
   test('(PUT)/api/myteemio/status/:id', async () => {
@@ -295,5 +290,76 @@ describe('MyTeemio Routes', async () => {
     expect(res.status).toBe(200);
     expect(body.message).toBe('Teemio was succesfully deleted');
     expect(teemioAfterDelete).toBeNull();
+  });
+});
+
+// ------------------ User Routes------------------ //
+describe('User Routes', async () => {
+  test('(GET)/api/user/myteemios', async () => {
+    const user = await TESTgetMockUserByEmail('charlie@example.com');
+    const token = await TESTcreateAuthToken(user?.id);
+
+    const req = new Request(`${baseURI}/api/user/myteemios`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const res = await app.handle(req);
+    const body = (await res.json()) as MyTeemioDocument[];
+
+    expect(res.status).toBe(200);
+    expect(body).toHaveLength(1);
+    expect(body[0].eventinfo.name).toBe('Annual Company Retreat');
+    expect(body[0].activities[0].activity).toBe('656f53446b9f52b36fbde08a');
+  });
+
+  test('(GET)/api/user/account', async () => {
+    const user = await TESTgetMockUserByEmail('george@example.com');
+    const token = await TESTcreateAuthToken(user?.id);
+
+    const req = new Request(`${baseURI}/api/user/account`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const res = await app.handle(req);
+    const body = (await res.json()) as UserDocument;
+
+    expect(res.status).toBe(200);
+    expect(body.name).toBe('George Lucas');
+    expect(body.email).toBe('george@example.com');
+    expect(body.phone).toBe('+1313819383');
+  });
+});
+
+// ------------------ Admin Routes ------------------ //
+
+describe('Admin Routes', async () => {
+  test('(GET)/api/admin/create', async () => {
+    const user = await TESTgetMockUserByEmail('test@test.com');
+    const token = await TESTcreateAuthToken(user?.id);
+
+    const req = new Request(`${baseURI}/api/admin/create`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ name: 'test', email: 'newuser@test.com', phone: '+4512345678', type: 'user' }),
+    });
+
+    const res = await app.handle(req);
+    const body = (await res.json()) as UserDocument;
+
+    expect(res.status).toBe(200);
+    expect(body.name).toBe('test');
+    expect(body.email).toBe('newuser@test.com')
+    expect(body.phone).toBe('+4512345678');
   });
 });
