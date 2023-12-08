@@ -18,6 +18,52 @@ const baseURI = `http://localhost:${process.env.PORT ?? 3001}`;
 await TESTsetupInMemoryDatabase();
 await TESTseedDatabase();
 
+
+// ------------------ User Routes------------------ //
+describe('User Routes', async () => {
+  test('(GET)/api/user/myteemios', async () => {
+    const user = await TESTgetMockUserByEmail('charlie@example.com');
+    const token = await TESTcreateAuthToken(user?.id);
+
+    const req = new Request(`${baseURI}/api/user/myteemios`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const res = await app.handle(req);
+    const body = (await res.json()) as MyTeemioDocument[];
+
+    expect(res.status).toBe(200);
+    expect(body).toHaveLength(1);
+    expect(body[0].eventinfo.name).toBe('Annual Company Retreat');
+    expect(body[0].activities[0].activity).toBe('656f53446b9f52b36fbde08a');
+  });
+
+  test('(GET)/api/user/account', async () => {
+    const user = await TESTgetMockUserByEmail('george@example.com');
+    const token = await TESTcreateAuthToken(user?.id);
+
+    const req = new Request(`${baseURI}/api/user/account`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const res = await app.handle(req);
+    const body = (await res.json()) as UserDocument;
+
+    expect(res.status).toBe(200);
+    expect(body.name).toBe('George Lucas');
+    expect(body.email).toBe('george@example.com');
+    expect(body.phone).toBe('+1313819383');
+  });
+});
+
 // ------------------ Activities Routes ------------------ //
 describe('Activity Routes', async () => {
   test('(GET)/api/activities', async () => {
@@ -293,53 +339,7 @@ describe('MyTeemio Routes', async () => {
   });
 });
 
-// ------------------ User Routes------------------ //
-describe('User Routes', async () => {
-  test('(GET)/api/user/myteemios', async () => {
-    const user = await TESTgetMockUserByEmail('charlie@example.com');
-    const token = await TESTcreateAuthToken(user?.id);
-
-    const req = new Request(`${baseURI}/api/user/myteemios`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    const res = await app.handle(req);
-    const body = (await res.json()) as MyTeemioDocument[];
-
-    expect(res.status).toBe(200);
-    expect(body).toHaveLength(1);
-    expect(body[0].eventinfo.name).toBe('Annual Company Retreat');
-    expect(body[0].activities[0].activity).toBe('656f53446b9f52b36fbde08a');
-  });
-
-  test('(GET)/api/user/account', async () => {
-    const user = await TESTgetMockUserByEmail('george@example.com');
-    const token = await TESTcreateAuthToken(user?.id);
-
-    const req = new Request(`${baseURI}/api/user/account`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    const res = await app.handle(req);
-    const body = (await res.json()) as UserDocument;
-
-    expect(res.status).toBe(200);
-    expect(body.name).toBe('George Lucas');
-    expect(body.email).toBe('george@example.com');
-    expect(body.phone).toBe('+1313819383');
-  });
-});
-
 // ------------------ Admin Routes ------------------ //
-
 describe('Admin Routes', async () => {
   test('(GET)/api/admin/create', async () => {
     const user = await TESTgetMockUserByEmail('test@test.com');
@@ -359,7 +359,7 @@ describe('Admin Routes', async () => {
 
     expect(res.status).toBe(200);
     expect(body.name).toBe('test');
-    expect(body.email).toBe('newuser@test.com')
+    expect(body.email).toBe('newuser@test.com');
     expect(body.phone).toBe('+4512345678');
   });
 });
