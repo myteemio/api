@@ -13,6 +13,7 @@ import {
 import { MyTeemio, MyTeemioDocument } from '../models/MyTeemio';
 import { TESTmockSingleActivityBody, TESTmockSingleTeemioBody, TESTmockUpdateTeemioBody } from '../util/testData';
 import { UserDocument } from '../models/User';
+import dayjs from 'dayjs';
 
 const baseURI = `http://localhost:${process.env.PORT ?? 3001}`;
 await TESTsetupInMemoryDatabase();
@@ -165,29 +166,27 @@ describe('MyTeemio Routes', async () => {
   });
 
   test('(POST)/api/myteemio/vote/:id', async () => {
+    const teemioId = await TESTgetRandomMyTeemioId('active')
+    const teemio = (await TESTgetTeemioById(teemioId!)) as MyTeemioDocument;
+    //Setup to vote on valid dates and activities
+    const dateToVoteOn = dayjs(teemio.dates[0].date).format('YYYY-MM-DD');
+    const activityToVoteOn = teemio.activities[0].activity;
+    const dateVotesBefore = teemio.dates[0].votes.length;
+    const activityVotesBefore = teemio.activities[0].votes.length;
+
     const mockTeemioVoteBody = {
       activitiesVotedOn: [
         {
-          activity: {
-            name: 'My cool custom activity2',
-            description: 'This is a custom activity2',
-            image: 'custom_activit2y.jpg',
-            address: {
-              address1: '123412313Custom Road',
-              zipcode: '12345123',
-              city: 'Custom City2',
-              country: 'Cool Country',
-            },
-          },
+          activity: activityToVoteOn
         },
       ],
-      datesVotedOn: ['2023-12-06'],
+      datesVotedOn: [dateToVoteOn],
       userinfo: {
         name: 'Thomas',
         email: 'thomas@gmail.com',
       },
     };
-    const teemioId = await TESTgetRandomMyTeemioId();
+
     const req = new Request(`${baseURI}/api/myteemio/vote/${teemioId}`, {
       method: 'POST',
       headers: {
@@ -197,7 +196,12 @@ describe('MyTeemio Routes', async () => {
     });
 
     const res = await app.handle(req);
+    console.log(res)
     const body = (await res.json()) as MyTeemioDocument;
+    console.log(body)
+    expect(res.status).toBe(200);
+    expect(body.dates[0].votes).toHaveLength(dateVotesBefore + 1);
+    expect(body.activities[0].votes).toHaveLength(activityVotesBefore + 1);
   });
 
   test('(PUT)/api/myteemio/status/:id', async () => {
@@ -381,6 +385,5 @@ describe('Auth Routes', async () => {
 
     expect(res.status).toBe(200);
     expect(body.message).toBe('Check your email for magic link to login!');
-    
   });
 });

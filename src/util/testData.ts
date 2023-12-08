@@ -136,7 +136,7 @@ export const TESTmockActivities = [
 
 export const TESTmockTeemios = [
   {
-    status: 'active',
+    status: 'finalized',
     activities: [
       {
         activity: '656f53446b9f52b36fbde08a',
