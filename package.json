@@ -10,12 +10,14 @@
     "@elysiajs/cors": "^0.7.2",
     "@elysiajs/jwt": "^0.7.0",
     "@elysiajs/swagger": "^0.7.4",
+    "cheerio": "^1.0.0-rc.12",
     "dayjs": "^1.11.10",
     "elysia": "^0.7.30",
     "elysia-helmet": "^1.0.1",
     "jsonwebtoken": "^9.0.2",
     "mongodb-memory-server-core": "^9.1.1",
     "mongoose": "^8.0.2",
+    "puppeteer": "^21.6.1",
     "resend": "^2.0.0"
   },
   "devDependencies": {

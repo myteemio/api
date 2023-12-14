@@ -421,7 +421,7 @@ export const MyTeemioController = new Elysia({ name: 'routes:myteemio' }).group(
 
   app.get(
     '/pdf/:id',
-    ({ set }) => {
+    ({ set, params: {id} }) => {
       set.status = 500;
       return { message: 'Not implemented', error_code: 'notimplemented' };
     },
