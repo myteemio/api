@@ -5,6 +5,7 @@ import puppeteer from 'puppeteer';
 import { MyTeemioDocument } from '../models/MyTeemio';
 import { findActivityById } from './activityService';
 import { findTeemioById } from './myTeemioService';
+import { dateToWeekday } from '../util/date';
 
 export async function createTeemioHTMLTemplateOne(teemio: MyTeemioDocument) {
   var pdfAsString = await fs.readFile(path.join(import.meta.dir, '../temp/teemioTemplateOne.html'));
@@ -15,35 +16,47 @@ export async function createTeemioHTMLTemplateOne(teemio: MyTeemioDocument) {
   if (teemio.eventinfo.name) {
     $('.event-title').text(teemio.eventinfo.name);
   }
-  console.log($('.event-title').contents().text());
 
   // There is a description
   if (teemio.eventinfo.description) {
     $('.event-description').text(teemio.eventinfo.description);
   }
-  console.log($('.event-description').contents().text());
 
   // There is an image
   //TODO: add this
 
-  // There is activities to vote for
+  //There is activities to vote for
   if (teemio.activities) {
     const activities = teemio.activities.length > 4 ? teemio.activities.slice(0, 4) : teemio.activities;
-    activities.forEach(async (activity) => {
+
+    for (const activity of activities) {
+      //Activity is reference
       if (typeof activity.activity === 'string') {
         const foundActivity = await findActivityById(activity.activity);
-        $('vote-list-activities').append(`<li>${foundActivity?.name}</li>`);
+        $('.vote-list-activities').append(`<li>${foundActivity?.name}</li>`);
       } else {
-        $('vote-list-activities').append(`<li>${activity.activity.name}</li>`);
+        //Activity is custom
+        $('.vote-list-activities').append(`<li>${activity.activity.name}</li>`);
       }
-    });
+    }
 
     if (teemio.activities.length > 4) {
-      $('vote-list-activities').append(`<li>... and ${teemio.activities.length - 4} more</li>`);
+      $('.vote-list-activities').append(`<li>... og ${teemio.activities.length - 4} mere</li>`);
     }
   }
 
   // There is dates to vote for
+  if (teemio.dates) {
+    const dates = teemio.dates.length > 4 ? teemio.dates.slice(0, 4) : teemio.dates;
+
+    for (const date of dates) {
+      $('.vote-list-dates').append(`<li>${dateToWeekday(date.date)}</li>`);
+    }
+
+    if (teemio.dates.length > 4) {
+      $('.vote-list-dates').append(`<li>... og ${teemio.dates.length - 4} mere</li>`);
+    }
+  }
 
   // There is a link
 
