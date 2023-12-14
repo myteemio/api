@@ -7,7 +7,7 @@ import { findActivityById } from './activityService';
 import { findTeemioById } from './myTeemioService';
 
 export async function createTeemioHTMLTemplateOne(teemio: MyTeemioDocument) {
-  var pdfAsString = await fs.readFile(path.resolve(import.meta.dir, '../temp/teemioTemplateOne.html'));
+  var pdfAsString = await fs.readFile(path.join(import.meta.dir, '../temp/teemioTemplateOne.html'));
 
   var $ = cheerio.load(pdfAsString);
 
@@ -53,28 +53,29 @@ export async function createTeemioHTMLTemplateOne(teemio: MyTeemioDocument) {
 export async function generatePdf() {
   const teemio = await findTeemioById('656f7f5136dd78f8d5859eab');
   const pdfDocRaw = await createTeemioHTMLTemplateOne(teemio as MyTeemioDocument);
+  const browser = await puppeteer.launch({
+    headless: 'new',
+    args: ['--disable-dev-shm-usage', '--no-sandbox'],
+  });
 
-  if(pdfDocRaw){
+  if (pdfDocRaw) {
     try {
-      const browser = await puppeteer.launch({
-        headless: 'new',
-        args: ['--disable-dev-shm-usage', '--no-sandbox'],
-      });
       const page = await browser.newPage();
       await page.setCacheEnabled(false);
       await page.setContent(pdfDocRaw, {
         waitUntil: 'domcontentloaded',
       });
-  
-      await page.pdf({
-        path: path.join(import.meta.dir,'../pdf/teemio.pdf'),
+
+      const pdf = await page.pdf({
         format: 'A4',
         printBackground: true,
       });
-      
-      await browser.close();
+
+      await fs.writeFile(path.join(import.meta.dir, '../pdf/teemio.pdf'), pdf);
     } catch (error) {
       console.error('There was an error generating the PDF!', error);
-    } 
+    } finally {
+      browser.close();
+    }
   }
 }

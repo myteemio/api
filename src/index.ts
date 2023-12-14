@@ -118,9 +118,6 @@ app.use(AdminController);
 // Start the server
 app.listen(process.env.PORT ?? 3001);
 
-// const teemio = await findTeemioById('656f7f5136dd78f8d5859eab');
-// createTeemioHTMLTemplateOne(teemio as MyTeemioDocument);
-
-// generatePdf();
+await generatePdf();
 
 console.log(`🦊 Elysia is running at http://${app.server?.hostname}:${app.server?.port}`);
