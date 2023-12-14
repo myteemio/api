@@ -196,9 +196,7 @@ describe('MyTeemio Routes', async () => {
     });
 
     const res = await app.handle(req);
-    console.log(res)
     const body = (await res.json()) as MyTeemioDocument;
-    console.log(body)
     expect(res.status).toBe(200);
     expect(body.dates[0].votes).toHaveLength(dateVotesBefore + 1);
     expect(body.activities[0].votes).toHaveLength(activityVotesBefore + 1);
