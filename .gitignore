@@ -41,4 +41,8 @@ yarn-error.log*
 package-lock.json
 **/*.bun
 
+.vscode
+
 .env*
+# PDFs
+/teemioPDFs

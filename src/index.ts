@@ -25,6 +25,7 @@ if (!process.env.RESEND_API_KEY) {
 import './db/setupMongoDB';
 import { AdminController } from './controllers/AdminController';
 import { ElysiaSwaggerConfig } from '@elysiajs/swagger/dist/types';
+import { generatePdf } from './services/pdfService';
 // Setup the Web API
 export const app = new Elysia({ prefix: '/api' });
 

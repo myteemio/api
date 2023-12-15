@@ -340,6 +340,8 @@ describe('MyTeemio Routes', async () => {
   });
 });
 
+//TODO: Test PDF route
+
 // ------------------ Admin Routes ------------------ //
 describe('Admin Routes', async () => {
   test('(GET)/api/admin/create', async () => {

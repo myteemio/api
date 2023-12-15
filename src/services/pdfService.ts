@@ -23,6 +23,7 @@ export async function createTeemioHTMLTemplateOne(teemio: MyTeemioDocument) {
   }
 
   if (teemio.eventinfo.logo) {
+    //TODO: Get image from database
     const imageBufferEventImage = await fs.readFile(path.join(import.meta.dir, '../public/people.jpg'));
     const imageAsBase64EventImage = imageBufferEventImage.toString('base64');
     $('.event-image').attr('src', `data:image/jpg;base64,${imageAsBase64EventImage}`);
@@ -104,13 +105,12 @@ export async function generatePdf(id: string) {
       await page.setContent(pdfDocRaw.htmlWithImages, {
         waitUntil: 'domcontentloaded',
       });
-
       const pdf = await page.pdf({
         format: 'A4',
         printBackground: true,
       });
-
-      await fs.writeFile(path.join(import.meta.dir, '../public/teemio.pdf'), pdf);
+      const versionNumber = await getTeemioPdfVersionNumber(id);
+      await fs.writeFile(`teemioPDFs/teemio-${id}V${versionNumber}.pdf`, pdf);
       return pdf;
     } catch (error) {
       console.error('There was an error generating the PDF!', error);
@@ -118,6 +118,16 @@ export async function generatePdf(id: string) {
       browser.close();
     }
   }
+}
+
+export async function getTeemioPdfVersionNumber(id: string) {
+  let versionNumber = 0;
+  let exists = await fs.exists(`teemioPDFs/teemio-${id}V${versionNumber}.pdf`);
+  while (exists) {
+    versionNumber++;
+    exists = await fs.exists(`teemioPDFs/teemio-${id}V${versionNumber}.pdf`);
+  }
+  return versionNumber;
 }
 
 export async function generateQRCode(teemioUrl: string) {
@@ -140,7 +150,7 @@ export async function generateQRCode(teemioUrl: string) {
         el.dispatchEvent(new Event('input', { bubbles: true }));
       },
       `${baseUrl + teemioUrl}`
-    ); 
+    );
     await (await page.$('#qrcodeUrl'))?.press('Enter'); // Enter Key
     await page.click('#button-create-qr-code', { delay: 1000 });
     const imgSrc = await page.$eval('.preview img[src]', (img) => img.getAttribute('src'));
@@ -150,8 +160,8 @@ export async function generateQRCode(teemioUrl: string) {
     const clip = {
       x: 50,
       y: 50,
-      width: 1050, 
-      height: 1050, 
+      width: 1050,
+      height: 1050,
     };
 
     await page.screenshot({ path: path.join(import.meta.dir, '../public/teemioScreen.png'), clip });
