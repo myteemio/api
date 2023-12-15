@@ -25,11 +25,6 @@ if (!process.env.RESEND_API_KEY) {
 import './db/setupMongoDB';
 import { AdminController } from './controllers/AdminController';
 import { ElysiaSwaggerConfig } from '@elysiajs/swagger/dist/types';
-import { createTeemioHTMLTemplateOne, generatePdf } from './services/pdfService';
-import { find } from 'cheerio/lib/api/traversing';
-import { findTeemioById } from './services/myTeemioService';
-import { MyTeemioDocument } from './models/MyTeemio';
-
 // Setup the Web API
 export const app = new Elysia({ prefix: '/api' });
 
@@ -117,7 +112,5 @@ app.use(AdminController);
 
 // Start the server
 app.listen(process.env.PORT ?? 3001);
-
-await generatePdf();
 
 console.log(`🦊 Elysia is running at http://${app.server?.hostname}:${app.server?.port}`);

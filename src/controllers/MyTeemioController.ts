@@ -27,6 +27,7 @@ import { stringToDayjs } from '../util/date';
 import { UserDocument } from '../models/User';
 import { BadRequestError, ForbiddenError, InternalServerError, NotFoundError } from '../types/CustomErrors';
 import { errorHandler } from '../util/response';
+import { generatePdf } from '../services/pdfService';
 
 export const myTeemioCustomActivityDTO = t.Object({
   name: t.String(),
@@ -143,6 +144,8 @@ const voteTeemioDTO = t.Object({
   }),
 });
 
+//TODO: Double check auth works as we want to. Everything needs auth header on MyTeemio atm
+
 export const MyTeemioController = new Elysia({ name: 'routes:myteemio' }).group('/myteemio', (app) => {
   app.post(
     '/',
@@ -181,7 +184,7 @@ export const MyTeemioController = new Elysia({ name: 'routes:myteemio' }).group(
 
       let userid = existingUser?.id;
 
-      if (!existingUser) {
+      if (!userid) {
         // Create new user
         const newUser = await createNewUser({
           ...body.organizer,
@@ -223,6 +226,7 @@ export const MyTeemioController = new Elysia({ name: 'routes:myteemio' }).group(
       detail: {
         summary: 'Create a new Teemio event',
         tags: ['My Teemio'],
+        security: [{ AccessToken: [] }],
       },
     }
   );
@@ -325,6 +329,7 @@ export const MyTeemioController = new Elysia({ name: 'routes:myteemio' }).group(
       detail: {
         summary: 'Let users vote on their favorite activities or dates',
         tags: ['My Teemio'],
+        security: [{ AccessToken: [] }],
       },
     }
   );
@@ -361,6 +366,7 @@ export const MyTeemioController = new Elysia({ name: 'routes:myteemio' }).group(
       detail: {
         summary: 'Get a Teemio with ID or URL',
         tags: ['My Teemio'],
+        security: [{ AccessToken: [] }],
       },
     }
   );
@@ -419,28 +425,52 @@ export const MyTeemioController = new Elysia({ name: 'routes:myteemio' }).group(
     }
   );
 
-  app.get(
+  app.use(isAuthenticated({ type: 'All' })).get(
     '/pdf/:id',
-    ({ set, params: {id} }) => {
-      set.status = 500;
-      return { message: 'Not implemented', error_code: 'notimplemented' };
+    async ({ params: { id } }) => {
+      if (mongoose.isValidObjectId(id)) {
+        const foundTeemio = await findTeemioById(id);
+
+        if (!foundTeemio) {
+          throw new NotFoundError('Teemio not found!');
+        }
+
+        try {
+          const pdf = await generatePdf(id);
+          if (pdf) {
+            return { message: 'PDF successfully generated' };
+          }
+        } catch (error) {
+          throw new InternalServerError(`There was an error generating the PDF: ${error}`);
+        }
+      }
     },
     {
+      error({ error, set }) {
+        if (error instanceof NotFoundError) {
+          return errorHandler(set.status, error.statusCode, `${error.message}`);
+        }
+        if (error instanceof InternalServerError) {
+          return errorHandler(set.status, error.statusCode, `${error.message}`);
+        }
+        return errorHandler(set.status, 500, `Error: ${error.message}`);
+      },
       response: {
-        200: t.Object({ pdf: t.File() }),
+        200: t.Object({ message: t.String({ default: 'PDF generated' }) }),
         404: NotFoundDTO,
         500: InternalServerErrorDTO,
       },
       detail: {
         summary: 'Return a PDF version of the Teemio event',
         tags: ['My Teemio'],
+        security: [{ AccessToken: [] }],
       },
     }
   );
 
   app.use(isAuthenticated({ type: 'All' })).put(
     '/status/:id',
-    async ({ body, set, params: { id }, user }) => {
+    async ({ body, params: { id }, user }) => {
       if (mongoose.isValidObjectId(id)) {
         const foundTeemio = await findTeemioById(id);
 

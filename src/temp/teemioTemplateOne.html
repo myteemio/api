@@ -19,7 +19,7 @@
       med til at vælge). Vi starter ud med en sjov aktivitet, efterfulgt af spisning på den fine restaurant Noma. Glæder
       mig til at se jer allesammen!
     </p>
-    <img src="/people.jpg" class="event-image" alt="event-image" />
+    <img class="event-image" alt="event-image" />
     <h2 class="vote-title">Stem på aktivitet og dato</h2>
     <div class="vote-options-container">
       <div class="activities-container">
@@ -35,7 +35,10 @@
     </div>
     <h2 class="scan-title">Scan QR koden eller følg linket for at stemme</h2>
     <div class="scan-link-container">
-      <img class="qr-code" src="/qr.png" />
+      <div class="qr-code-container">
+        <img class="qr-code" alt="qr-code" />
+        <img class="qr-logo" alt="qr-logo" />
+      </div>
       <div class="link-container">
         <a class="link">https://teemio.dk/myteemio/ccx-padel</a>
       </div>
@@ -148,8 +151,22 @@
     height: 12%;
   }
 
+  .qr-code-container {
+    position: relative;
+    height: 100%;
+    width: 20%;
+  }
+
   .qr-code {
     height: 100%;
+    width: 100%;
+  }
+
+  .qr-logo {
+    position: absolute;
+    left: 40%;
+    top: 40%;
+    height: 20%;
     width: 20%;
   }
 
