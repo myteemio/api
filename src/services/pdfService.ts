@@ -18,13 +18,19 @@ export async function generatePdf(teemio: MyTeemioDocument) {
         waitUntil: 'domcontentloaded',
       });
 
-      const versionNumber = new Date().getUTCSeconds();
+      const versionNumber = new Date().getTime();
 
       const pdf = await page.pdf({
-        path: path.join(import.meta.dir, `../../TeemioEventPDFs/teemio-${teemio.id}V${versionNumber}.pdf`),
         format: 'A4',
         printBackground: true,
       });
+
+      const filePath = path.join(import.meta.dir, `../../TeemioEventPDFs/teemio-${teemio.id}V${versionNumber}.pdf`);
+      const filesize = await Bun.write(filePath, pdf);
+
+      if (filesize <= 0) {
+        throw new Error('The filesize of the PDF generated was 0!');
+      }
 
       return pdf;
     } catch (error) {
@@ -70,7 +76,7 @@ export async function generateQRCode(teemioUrl: string) {
       height: 1050,
     };
 
-    await page.screenshot({ path: path.join(import.meta.dir, '../public/teemioScreen.png'), clip });
+    await page.screenshot({ path: path.join(import.meta.dir, '../../public/teemioScreen.png'), clip });
   } catch (error) {
     console.error('There was an error generating the QRCode!', error);
   } finally {

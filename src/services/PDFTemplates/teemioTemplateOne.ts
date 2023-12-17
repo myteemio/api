@@ -1,6 +1,5 @@
 import path from 'path';
 import * as cheerio from 'cheerio';
-import fs from 'fs/promises';
 import { MyTeemioDocument } from '../../models/MyTeemio';
 import { findActivityById } from '../activityService';
 import { dateToWeekday } from '../../util/date';
@@ -8,9 +7,9 @@ import { dateToWeekday } from '../../util/date';
 const baseUrl = 'https://teemio.dk/myteemio/';
 
 export async function createTeemioHTMLTemplateOne(teemio: MyTeemioDocument) {
-  var pdfAsString = await fs.readFile(path.join(import.meta.dir, './PDFTemplates/teemioTemplateOne.html'));
+  const pdfFile = Bun.file(path.join(import.meta.dir, './teemioTemplateOne.html'));
 
-  var $ = cheerio.load(pdfAsString);
+  var $ = cheerio.load(await pdfFile.text());
 
   if (teemio.eventinfo.name) {
     $('.event-title').text(teemio.eventinfo.name);
@@ -22,8 +21,8 @@ export async function createTeemioHTMLTemplateOne(teemio: MyTeemioDocument) {
 
   if (teemio.eventinfo.logo) {
     //TODO: Get image from database
-    const imageBufferEventImage = await fs.readFile(path.join(import.meta.dir, '../public/people.jpg'));
-    const imageAsBase64EventImage = imageBufferEventImage.toString('base64');
+    const EventImageFile = Bun.file(path.join(import.meta.dir, '../../public/people.jpg'));
+    const imageAsBase64EventImage = Buffer.from(await EventImageFile.arrayBuffer()).toString('base64');
     $('.event-image').attr('src', `data:image/jpg;base64,${imageAsBase64EventImage}`);
   }
 
@@ -60,16 +59,15 @@ export async function createTeemioHTMLTemplateOne(teemio: MyTeemioDocument) {
 
   if (teemio.eventinfo.url) {
     // await generateQRCode(teemio.eventinfo.url);
-
     $('.link').text(baseUrl + teemio.eventinfo.url);
     try {
-      const imageBufferQr = await fs.readFile(path.join(import.meta.dir, '../public/teemioScreen.png'));
-      const imageAsBase64Qr = imageBufferQr.toString('base64');
-      $('.qr-code').attr('src', `data:image/png;base64,${imageAsBase64Qr}`);
+      const QrCode = Bun.file(path.join(import.meta.dir, '../../public/teemioScreen.png'));
+      const QrCodeBase64 = Buffer.from(await QrCode.arrayBuffer()).toString('base64');
+      $('.qr-code').attr('src', `data:image/png;base64,${QrCodeBase64}`);
 
-      const imageBufferQrLogo = await fs.readFile(path.join(import.meta.dir, '../public/teemioLogo.png'));
-      const imageAsBase64QrLogo = imageBufferQrLogo.toString('base64');
-      $('.qr-logo').attr('src', `data:image/png;base64,${imageAsBase64QrLogo}`);
+      const QrCodeLogo = Bun.file(path.join(import.meta.dir, '../../public/teemioLogo.png'));
+      const QrCodeLogoBase64 = Buffer.from(await QrCodeLogo.arrayBuffer()).toString('base64');
+      $('.qr-logo').attr('src', `data:image/png;base64,${QrCodeLogoBase64}`);
     } catch (error) {
       console.error('There was an error reading the image!', error);
     }
