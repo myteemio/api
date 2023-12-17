@@ -166,7 +166,7 @@ describe('MyTeemio Routes', async () => {
   });
 
   test('(POST)/api/myteemio/vote/:id', async () => {
-    const teemioId = await TESTgetRandomMyTeemioId('active')
+    const teemioId = await TESTgetRandomMyTeemioId('active');
     const teemio = (await TESTgetTeemioById(teemioId!)) as MyTeemioDocument;
     //Setup to vote on valid dates and activities
     const dateToVoteOn = dayjs(teemio.dates[0].date).format('YYYY-MM-DD');
@@ -177,7 +177,7 @@ describe('MyTeemio Routes', async () => {
     const mockTeemioVoteBody = {
       activitiesVotedOn: [
         {
-          activity: activityToVoteOn
+          activity: activityToVoteOn,
         },
       ],
       datesVotedOn: [dateToVoteOn],
@@ -196,9 +196,7 @@ describe('MyTeemio Routes', async () => {
     });
 
     const res = await app.handle(req);
-    console.log(res)
     const body = (await res.json()) as MyTeemioDocument;
-    console.log(body)
     expect(res.status).toBe(200);
     expect(body.dates[0].votes).toHaveLength(dateVotesBefore + 1);
     expect(body.activities[0].votes).toHaveLength(activityVotesBefore + 1);
