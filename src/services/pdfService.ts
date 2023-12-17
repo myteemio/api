@@ -90,9 +90,8 @@ export async function createTeemioHTMLTemplateOne(teemio: MyTeemioDocument) {
   };
 }
 
-export async function generatePdf(id: string) {
-  const teemio = await findTeemioById(id);
-  const pdfDocRaw = await createTeemioHTMLTemplateOne(teemio as MyTeemioDocument);
+export async function generatePdf(teemio: MyTeemioDocument) {
+  const pdfDocRaw = await createTeemioHTMLTemplateOne(teemio);
   const browser = await puppeteer.launch({
     headless: 'new',
     args: ['--disable-dev-shm-usage', '--no-sandbox'],
@@ -109,7 +108,7 @@ export async function generatePdf(id: string) {
       const versionNumber = new Date().getUTCSeconds();
 
       const pdf = await page.pdf({
-        path: path.join(import.meta.dir, `../../TeemioEventPDFs/teemio-${id}V${versionNumber}.pdf`),
+        path: path.join(import.meta.dir, `../../TeemioEventPDFs/teemio-${teemio.id}V${versionNumber}.pdf`),
         format: 'A4',
         printBackground: true,
       });

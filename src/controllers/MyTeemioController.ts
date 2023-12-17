@@ -436,7 +436,7 @@ export const MyTeemioController = new Elysia({ name: 'routes:myteemio' }).group(
         }
 
         try {
-          const pdf = await generatePdf(id);
+          const pdf = await generatePdf(foundTeemio);
           if (pdf) {
             return { message: 'PDF successfully generated' };
           }
