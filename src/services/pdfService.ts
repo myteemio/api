@@ -10,7 +10,7 @@ import { dateToWeekday } from '../util/date';
 const baseUrl = 'https://teemio.dk/myteemio/';
 
 export async function createTeemioHTMLTemplateOne(teemio: MyTeemioDocument) {
-  var pdfAsString = await fs.readFile(path.join(import.meta.dir, '../temp/teemioTemplateOne.html'));
+  var pdfAsString = await fs.readFile(path.join(import.meta.dir, './PDFTemplates/teemioTemplateOne.html'));
 
   var $ = cheerio.load(pdfAsString);
 
@@ -105,12 +105,15 @@ export async function generatePdf(id: string) {
       await page.setContent(pdfDocRaw.htmlWithImages, {
         waitUntil: 'domcontentloaded',
       });
+
+      const versionNumber = new Date().getUTCSeconds();
+
       const pdf = await page.pdf({
+        path: path.join(import.meta.dir, `../../TeemioEventPDFs/teemio-${id}V${versionNumber}.pdf`),
         format: 'A4',
         printBackground: true,
       });
-      const versionNumber = await getTeemioPdfVersionNumber(id);
-      await fs.writeFile(`teemioPDFs/teemio-${id}V${versionNumber}.pdf`, pdf);
+
       return pdf;
     } catch (error) {
       console.error('There was an error generating the PDF!', error);
@@ -118,16 +121,6 @@ export async function generatePdf(id: string) {
       browser.close();
     }
   }
-}
-
-export async function getTeemioPdfVersionNumber(id: string) {
-  let versionNumber = 0;
-  let exists = await fs.exists(`teemioPDFs/teemio-${id}V${versionNumber}.pdf`);
-  while (exists) {
-    versionNumber++;
-    exists = await fs.exists(`teemioPDFs/teemio-${id}V${versionNumber}.pdf`);
-  }
-  return versionNumber;
 }
 
 export async function generateQRCode(teemioUrl: string) {
