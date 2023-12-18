@@ -308,6 +308,28 @@ describe('MyTeemio Routes', async () => {
     expect(body.final?.date.toString()).toBe(teemio.dates[0].date.toString());
   });
 
+  test('(GET)/api/myteemio/pdf/:id', async () => {
+    const adminUser = await TESTgetMockUserByEmail('test@test.com');
+    const token = TESTcreateAuthToken(adminUser?.id);
+
+    const teemioId = await TESTgetRandomMyTeemioId();
+    expect(teemioId).toBeDefined();
+
+    const req = new Request(`${baseURI}/api/myteemio/pdf/${teemioId}`, {
+      method: 'GET',
+      headers: {
+        accept: 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const res = await app.handle(req);
+    const body = (await res.json()) as { message: string };
+
+    expect(res.status).toBe(200);
+    expect(body.message).toBe('PDF successfully generated');
+  });
+
   test('(DELETE)/api/myteemio/:id', async () => {
     const adminUser = await TESTgetMockUserByEmail('test@test.com');
     const token = TESTcreateAuthToken(adminUser?.id);
@@ -339,8 +361,6 @@ describe('MyTeemio Routes', async () => {
     expect(teemioAfterDelete).toBeNull();
   });
 });
-
-//TODO: Test PDF route
 
 // ------------------ Admin Routes ------------------ //
 describe('Admin Routes', async () => {

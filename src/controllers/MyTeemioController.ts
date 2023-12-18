@@ -457,7 +457,7 @@ export const MyTeemioController = new Elysia({ name: 'routes:myteemio' }).group(
         return errorHandler(set.status, 500, `Error: ${error.message}`);
       },
       response: {
-        200: t.Object({ message: t.String({ default: 'PDF generated' }) }),
+        200: t.Object({ message: t.String({ default: 'PDF successfully generated' }) }),
         404: NotFoundDTO,
         500: InternalServerErrorDTO,
       },
