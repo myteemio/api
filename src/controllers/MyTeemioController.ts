@@ -101,6 +101,7 @@ export const MyTeemioDTO = t.Object({
     name: t.String(),
     description: t.String(),
     logo: t.String(),
+    image: t.String(),
     url: t.String(),
   }),
   dates: t.Array(MyTeemioDateWithVote),

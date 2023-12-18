@@ -156,6 +156,7 @@ describe('MyTeemio Routes', async () => {
     expect(body.organizer.name).toBe(user?.name || '');
     expect(body.organizer.email).toBe(user?.email || '');
     expect(body.eventinfo.name).toBe('Padel is fun');
+    expect(body.eventinfo.image).toBe('padel_image.png');
     expect(new Date(body.dates[0].date).toISOString()).toBe(new Date('2023-12-06').toISOString());
 
     //Check that the teemio was inserted into the database

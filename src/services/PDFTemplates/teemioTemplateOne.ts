@@ -19,7 +19,7 @@ export async function createTeemioHTMLTemplateOne(teemio: MyTeemioDocument, teem
     $('.event-description').text(teemio.eventinfo.description);
   }
 
-  if (teemio.eventinfo.logo) {
+  if (teemio.eventinfo.image) {
     //TODO: Get image from database
     const EventImageFile = Bun.file(path.join(import.meta.dir, '../../public/people.jpg'));
     const imageAsBase64EventImage = Buffer.from(await EventImageFile.arrayBuffer()).toString('base64');

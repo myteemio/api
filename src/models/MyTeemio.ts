@@ -18,7 +18,8 @@ const eventInfoSchema = new mongoose.Schema({
   name: { type: String, required: true },
   description: { type: String, required: true },
   logo: { type: String, required: true },
-  url: {type: String, required: true}
+  image: { type: String, required: true },
+  url: { type: String, required: true },
 });
 
 //Final schema
@@ -63,9 +64,9 @@ const myTeemioSchema = new mongoose.Schema({
   organizer: {
     type: {
       name: { type: String, ref: User, required: true },
-      email: {type: String, ref: User, required: true}
+      email: { type: String, ref: User, required: true },
     },
-  required: true,
+    required: true,
   },
   eventinfo: {
     type: eventInfoSchema,
