@@ -20,7 +20,7 @@ jobs:
       - name: Clear MongoDB Cache
         run: rm -rf /home/runner/.cache/mongodb-binaries
 
-        - name: Wait for a few seconds
+      - name: Wait for a few seconds
         run: sleep 10
 
       - name: Run Tests
