@@ -18,7 +18,7 @@ import {
 } from '../services/myTeemioService';
 import { createNewUser, findUserByEmail, isOwnerOfTeemioOrAdmin } from '../services/userService';
 import { mapMyTeemioToMyTeemioDTO } from '../services/mappers';
-import { activityExists } from '../services/activityService';
+import { activityExists, findActivityNamesInTeemio } from '../services/activityService';
 import mongoose from 'mongoose';
 import { isAuthenticated } from '../plugins/authPlugin';
 import { ForbiddenDTO } from '../types/ForbiddenDTO';
@@ -436,7 +436,8 @@ export const MyTeemioController = new Elysia({ name: 'routes:myteemio' }).group(
         }
 
         try {
-          const pdf = await generatePdf(foundTeemio);
+          const foundTeemioActivityNames = await findActivityNamesInTeemio(foundTeemio);
+          const pdf = await generatePdf(foundTeemio, foundTeemioActivityNames);
           if (pdf) {
             return { message: 'PDF successfully generated' };
           }
