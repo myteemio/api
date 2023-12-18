@@ -17,11 +17,9 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-        Optional: Clear MongoDB cache (uncomment if needed)
       - name: Clear MongoDB Cache
         run: rm -rf /home/runner/.cache/mongodb-binaries
 
-        Optional: Wait before running tests (uncomment if needed)
         - name: Wait for a few seconds
         run: sleep 10
 
