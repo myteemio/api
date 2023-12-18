@@ -1,8 +1,7 @@
 name: Deploy to TeemioAPI
 on:
   push:
-   paths-ignore:
-      - 'setupMongoDB.ts'
+
 jobs:
   test:
     name: test
@@ -11,6 +10,7 @@ jobs:
       DB_CONNECTION_STRING: ${{secrets.DB_CONNECTION_STRING}}
       JWT_SECRET: ${{ secrets.JWT_SECRET}}
       RESEND_API_KEY: ${{secrets.RESEND_APi_KEY}}
+      NODE_ENV: ${{secrets.NODE_ENV}}
     steps:
       - uses: actions/checkout@v3
       - uses: oven-sh/setup-bun@v1
