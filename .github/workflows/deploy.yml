@@ -7,6 +7,8 @@ jobs:
   test:
     name: test
     runs-on: ubuntu-latest
+    env:
+      JWT_SECRET: ${{ env.JWT_SECRET}}
     steps:
       - uses: actions/checkout@v3
       - uses: oven-sh/setup-bun@v1
