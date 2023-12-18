@@ -8,6 +8,7 @@ jobs:
     name: test
     runs-on: ubuntu-latest
     env:
+      DB_CONNECTION_STRING: ${{secrets.DB_CONNECTION_STRING}}
       JWT_SECRET: ${{ secrets.JWT_SECRET}}
       RESEND_API_KEY: ${{secrets.RESEND_APi_KEY}}
     steps:
