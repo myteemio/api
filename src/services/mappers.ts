@@ -86,6 +86,7 @@ export function mapMyTeemioToMyTeemioDTO(teemio: MyTeemioDocument): Static<typeo
     eventinfo: {
       description: teemio.eventinfo.description,
       logo: teemio.eventinfo.logo,
+      image: teemio.eventinfo.image,
       name: teemio.eventinfo.name,
       url: makeUrlSafe(teemio.eventinfo.name),
     },

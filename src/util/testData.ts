@@ -155,6 +155,7 @@ export const TESTmockTeemios = [
       name: 'Annual Company Retreat',
       description: 'A fun retreat for all employees',
       logo: 'company_logo.png',
+      image: 'company_image.png',
       url: 'annual-company-retreat',
     },
     dates: [
@@ -184,6 +185,7 @@ export const TESTmockTeemios = [
       name: 'Cultural Day',
       description: 'Exploring local art and culture',
       logo: 'culture_day.png',
+      image: 'culture_image.png',
       url: 'cultural-day',
     },
     dates: [
@@ -213,6 +215,7 @@ export const TESTmockTeemios = [
       name: 'Outdoor Adventures',
       description: 'Hiking and exploring nature',
       logo: 'outdoor_adventures.png',
+      image: 'outdoor_image.png',
       url: 'outdoor-adventures',
     },
     dates: [
@@ -265,6 +268,7 @@ export const TESTmockTeemios = [
       name: 'Wellness Weekend',
       description: 'Relaxing activities for health and wellness',
       logo: 'wellness_weekend.png',
+      image: 'wellness_weekend_image.png',
       url: 'wellness-weekend',
     },
     dates: [
@@ -308,6 +312,7 @@ export const TESTmockTeemios = [
       name: 'Culinary Exploration',
       description: 'Cooking class for food enthusiasts',
       logo: 'culinary_exploration.png',
+      image: 'culinary_exploration_image.png',
       url: 'culinary-exploration',
     },
     dates: [
@@ -375,7 +380,8 @@ export const TESTmockSingleTeemioBody = {
   eventinfo: {
     name: 'Padel is fun',
     description: 'join for somepadel',
-    logo: 'padel.png',
+    logo: 'padel_logo.png',
+    image: 'padel_image.png',
     url: 'padel-is-fun',
   },
   dates: [
@@ -449,6 +455,7 @@ export const TESTmockUpdateTeemioBody = {
     name: 'New cool event',
     description: 'you should come to this event its cool',
     logo: 'coollogo.png',
+    image: 'cool_image.png',
     url: 'new-cool-event',
   },
   dates: [

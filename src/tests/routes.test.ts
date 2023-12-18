@@ -156,6 +156,7 @@ describe('MyTeemio Routes', async () => {
     expect(body.organizer.name).toBe(user?.name || '');
     expect(body.organizer.email).toBe(user?.email || '');
     expect(body.eventinfo.name).toBe('Padel is fun');
+    expect(body.eventinfo.image).toBe('padel_image.png');
     expect(new Date(body.dates[0].date).toISOString()).toBe(new Date('2023-12-06').toISOString());
 
     //Check that the teemio was inserted into the database
@@ -306,6 +307,28 @@ describe('MyTeemio Routes', async () => {
     expect(body.final).not.toBeNull();
     expect(body.final?.activities).toHaveLength(1);
     expect(body.final?.date.toString()).toBe(teemio.dates[0].date.toString());
+  });
+
+  test('(GET)/api/myteemio/pdf/:id', async () => {
+    const adminUser = await TESTgetMockUserByEmail('test@test.com');
+    const token = TESTcreateAuthToken(adminUser?.id);
+
+    const teemioId = await TESTgetRandomMyTeemioId();
+    expect(teemioId).toBeDefined();
+
+    const req = new Request(`${baseURI}/api/myteemio/pdf/${teemioId}`, {
+      method: 'GET',
+      headers: {
+        accept: 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const res = await app.handle(req);
+    const body = (await res.json()) as { message: string };
+
+    expect(res.status).toBe(200);
+    expect(body.message).toBe('PDF successfully generated');
   });
 
   test('(DELETE)/api/myteemio/:id', async () => {
