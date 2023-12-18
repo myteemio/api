@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       JWT_SECRET: ${{ secrets.JWT_SECRET}}
+      RESEND_API_KEY: ${{secrets.RESEND_APi_KEY}}
     steps:
       - uses: actions/checkout@v3
       - uses: oven-sh/setup-bun@v1
