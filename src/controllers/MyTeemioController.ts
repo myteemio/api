@@ -427,12 +427,16 @@ export const MyTeemioController = new Elysia({ name: 'routes:myteemio' }).group(
 
   app.use(isAuthenticated({ type: 'All' })).get(
     '/pdf/:id',
-    async ({ params: { id } }) => {
+    async ({ params: { id }, user }) => {
       if (mongoose.isValidObjectId(id)) {
         const foundTeemio = await findTeemioById(id);
 
         if (!foundTeemio) {
           throw new NotFoundError('Teemio not found!');
+        }
+
+        if (!isOwnerOfTeemioOrAdmin(foundTeemio.organizer.email, user!)) {
+          throw new ForbiddenError('You have no access to this Teemio');
         }
 
         try {
